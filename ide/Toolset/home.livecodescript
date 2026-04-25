@@ -133,10 +133,13 @@ on handleOpenHyperCardSTAKs pHCStackList
    end if
 end handleOpenHyperCardSTAKs
 
+/* -- This was only here to prevent IDE users from editing & saving the Home stack from within the IDE.
+-- I've commented it out to make working on the IDE easier - Paul
 on saveStackRequest
-   set the cantModify of me to true
+	--    set the cantModify of me to true
    pass saveStackRequest
 end saveStackRequest
+*/
 
 local sLogPath
 on preOpenStack
