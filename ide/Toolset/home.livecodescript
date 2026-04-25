@@ -70,6 +70,69 @@ on shutdown
    end if
 end shutdown
 
+--- check for HyperCard Stacks on macOS
+on appleEvent theClass,theID
+   if theClass is "aevt" and theID is "odoc" then
+      request appleEvent data
+      put it into theFiles ## files OS is requesting your application opens, one per line
+      if theFiles is not "not found" and theFiles is not empty then
+         repeat for each line tFilePath in theFiles
+            open file tFilePath
+            read from file tFilePath for 8 bytes
+            close file tFilePath
+            if it contains "STAK" then
+               put tFilePath & cr after tHCStackList
+               next repeat
+            else
+               next repeat
+            end if
+         end repeat
+         if tHCStackList is not empty then
+            handleOpenHyperCardSTAKs tHCStackList
+         else
+            pass appleEvent
+         end if
+      else
+         pass appleEvent
+      end if
+      -- put "appleEvent:" & theClass,theID
+      -- pass appleEvent
+   else
+      -- put "appleEvent:" & theClass,theID
+   end if
+end appleEvent
+
+on handleOpenHyperCardSTAKs pHCStackList
+   if there is a folder "/Applications/HyperCardPreview.app" then
+      put "/Applications/HyperCardPreview.app"  into tHCPrv
+   else if there is a folder "~/Applications/HyperCardPreview.app" then
+      put "~/Applications/HyperCardPreview.app"  into tHCPrv
+   end if
+   put line 1 of pHCStackList into tStakFile
+   set the itemdelimiter to "."
+   if the last item of tStakFile is not "stak" then
+      --rename file with .stak filename extention
+      --	rename [{file | folder | directory}] filePath to newPath
+      try
+         -- put GetHFSCreatorTypeCodesOfFile(tStakFile) into tCreatorAndType
+         -- if line 1 of tCreatorAndType <> "WILD" then
+         --   get SetHFSCreatorCodeOfFile(tStakFile,"WILD")
+         -- end if
+         -- if line 2 of tCreatorAndType <> "STAK" then
+         --   get SetHFSTypeCodeOfFile(tStakFile,"STAK")
+         -- end if
+         rename file tStakFile to tStakFile & ".stak"
+      end try
+      if there is a file (tStakFile & ".stak") then put (tStakFile & ".stak") into tStakFile
+   end if
+   set the itemdelimiter to ","
+   if tHCPrv is not empty then
+      launch tStakFile with tHCPrv
+       -- else
+      -- put "HyperCard STAKs:" & cr & pHCStackList
+   end if
+end handleOpenHyperCardSTAKs
+
 on saveStackRequest
    set the cantModify of me to true
    pass saveStackRequest
