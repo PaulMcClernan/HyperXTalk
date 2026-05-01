@@ -9534,6 +9534,9 @@
     <ClInclude Include="..\..\..\engine\src\w32-clipboard.h">
       <Filter>..\..\..\engine\src</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\engine\src\notification.h">
+      <Filter>..\..\..\engine\src</Filter>
+    </ClInclude>
     <ClCompile Include="..\..\..\engine\src\clipboard.cpp">
       <Filter>..\..\..\engine\src</Filter>
     </ClCompile>
@@ -9541,6 +9544,12 @@
       <Filter>..\..\..\engine\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\engine\src\w32-clipboard.cpp">
+      <Filter>..\..\..\engine\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\engine\src\notification.cpp">
+      <Filter>..\..\..\engine\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\engine\src\w32-notification.cpp">
       <Filter>..\..\..\engine\src</Filter>
     </ClCompile>
     <ClInclude Include="..\..\..\engine\src\mixin-refcounted.h">

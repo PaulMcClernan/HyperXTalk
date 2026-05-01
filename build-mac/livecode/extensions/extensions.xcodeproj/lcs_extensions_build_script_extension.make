@@ -5,7 +5,7 @@ all: \
     $(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.mime/mime.livecodescript \
     $(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.drawing/drawing.livecodescript \
     $(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.dropbox/dropbox.livecodescript \
-    $(BUILT_PRODUCTS_DIR)/packaged_extensions/com.hyperxtalk.library.animationengine/animationengine.livecodescript \
+    $(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.animationengine/animationengine.livecodescript \
     $(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.diff/diff.livecodescript \
     $(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.messageauthentication/messageauthentication.livecodescript \
     $(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.httpd/httpd.livecodescript \
@@ -53,10 +53,10 @@ $(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.dropbox/dropbox.l
 	@echo note: "Building script extension dropbox.livecodescript"
 	"$(BUILT_PRODUCTS_DIR)/server-community" script-libraries/extension-utils/resources/extension-utils.lc "$(not_a_real_variable)buildextension" dummy1 dummy2 dummy3 ../ide-support/revdocsparser.livecodescript "script-libraries/dropbox" "dropbox.livecodescript" "$(BUILT_PRODUCTS_DIR)/packaged_extensions" "$(not_a_real_variable)false"
 
-$(BUILT_PRODUCTS_DIR)/packaged_extensions/com.hyperxtalk.library.animationengine/animationengine.livecodescript \
+$(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.animationengine/animationengine.livecodescript \
     : \
     script-libraries/animationengine/animationengine.livecodescript
-	@mkdir -p "$(BUILT_PRODUCTS_DIR)/packaged_extensions/com.hyperxtalk.library.animationengine"
+	@mkdir -p "$(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.animationengine"
 	@echo note: "Building script extension animationengine.livecodescript"
 	"$(BUILT_PRODUCTS_DIR)/server-community" script-libraries/extension-utils/resources/extension-utils.lc "$(not_a_real_variable)buildextension" dummy1 dummy2 dummy3 ../ide-support/revdocsparser.livecodescript "script-libraries/animationengine" "animationengine.livecodescript" "$(BUILT_PRODUCTS_DIR)/packaged_extensions" "$(not_a_real_variable)false"
 

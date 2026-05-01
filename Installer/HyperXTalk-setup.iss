@@ -284,9 +284,15 @@ Name: "{userdocs}\{#MyAppName}\Stacks"
 
 ; ============================================================
 [Icons]
-Name: "{group}\{#MyAppName}";                    Filename: "{app}\{#MyAppExeName}"
+; AppUserModelID must match SetCurrentProcessExplicitAppUserModelID in dskw32main.cpp
+; so that Windows can deliver toast notifications and list the app in notification settings.
+Name: "{group}\{#MyAppName}"; \
+    Filename: "{app}\{#MyAppExeName}"; \
+    AppUserModelID: "HyperXTalk.Engine"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#MyAppName}";              Filename: "{app}\{#MyAppExeName}"; \
+Name: "{autodesktop}\{#MyAppName}"; \
+    Filename: "{app}\{#MyAppExeName}"; \
+    AppUserModelID: "HyperXTalk.Engine"; \
     Tasks: desktopicon
 
 ; ============================================================
