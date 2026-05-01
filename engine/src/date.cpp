@@ -906,12 +906,14 @@ static bool MCD_decompose_convert_format(MCExecContext &ctxt, int p_from, const 
 {
 	bool t_use_system = false;
 
-	if (p_from >= CF_SYSTEM)		// = 2000
+//	if (p_from >= CF_SYSTEM)		// = 2000
+	if (p_from > CF_SYSTEM)		// = 2000
 	{
 		t_use_system = true;
 		p_from -= CF_SYSTEM;
 	}
-	else if (p_from >= CF_ENGLISH)	// = 1000
+//	else if (p_from >= CF_ENGLISH)	// = 1000
+	else if (p_from > CF_ENGLISH)	// = 1000
 	{
 		t_use_system = false;
 		p_from -= CF_ENGLISH;
