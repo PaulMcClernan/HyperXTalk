@@ -37,6 +37,16 @@ Software Foundation.  */
 #include <dlfcn.h>    // dladdr / Dl_info — used in EnsureVLCInstance to locate the bundle
 #include <unistd.h>   // access() — used to probe candidate plugin directories
 #include <stdlib.h>   // setenv() — used to set VLC_PLUGIN_PATH before libvlc_new
+#elif defined(TARGET_PLATFORM_LINUX)
+#include <unistd.h>   // readlink, access
+#include <stdlib.h>   // setenv
+#include <limits.h>   // PATH_MAX
+// gdk/gdkx.h can't be included directly — its X11 types clash with the
+// engine's GdkWindow* typedefs in sysdefs.h.  Wrap it in a namespace like
+// lnxprefix.h does, so we can call x11::gdk_x11_drawable_get_xid().
+namespace x11 {
+#include <gdk/gdkx.h>
+}
 #endif
 
 // ---------------------------------------------------------------------------
@@ -1168,12 +1178,45 @@ bool MCVLCPlayer::EnsureVLCInstance()
         RemoveVectoredExceptionHandler(t_veh);
     }
 #else
-    // Linux
+    // Linux — probe for bundled VLC plugins, fall back to system paths.
+    //
+    // Layout matches Windows/Mac: <exe_dir>/vlc-plugins/plugins/ contains
+    // the codec/demux/output .so files.  The AppImage build script copies
+    // them from /usr/lib/<arch>/vlc/plugins/.
+    //
+    // VLC_PLUGIN_PATH is the correct mechanism for both libVLC 3 and 4.
+    {
+        char t_exe[PATH_MAX];
+        ssize_t t_len = readlink("/proc/self/exe", t_exe, sizeof(t_exe) - 1);
+        if (t_len > 0)
+        {
+            t_exe[t_len] = '\0';
+            char *t_sep = strrchr(t_exe, '/');
+            if (t_sep != nullptr)
+                *t_sep = '\0';
+
+            char t_probe[PATH_MAX];
+            snprintf(t_probe, sizeof(t_probe),
+                     "%s/vlc-plugins/plugins", t_exe);
+            if (access(t_probe, F_OK) == 0)
+            {
+                setenv("VLC_PLUGIN_PATH", t_probe, 1);
+            }
+            else
+            {
+                snprintf(t_probe, sizeof(t_probe),
+                         "%s/vlc-plugins", t_exe);
+                if (access(t_probe, F_OK) == 0)
+                    setenv("VLC_PLUGIN_PATH", t_probe, 1);
+            }
+        }
+    }
+
     const char *t_args[] = {
-        "--no-xlib",          // avoid X threading issues on Linux
         "--quiet",
         "--no-osd",
         "--no-stats",
+        "--vout=xcb_x11",
     };
     s_vlc_instance = libvlc_new(4, t_args);
 #endif
@@ -1213,6 +1256,9 @@ MCVLCPlayer::MCVLCPlayer()
     : m_player(nullptr),
       m_media(nullptr),
       m_view(nullptr),
+#if defined(TARGET_PLATFORM_LINUX)
+      m_colormap(0),
+#endif
       m_rect(MCRectangleMake(0, 0, 0, 0)),
       m_visible(true),
       m_offscreen(false),
@@ -1271,8 +1317,12 @@ MCVLCPlayer::MCVLCPlayer()
 
 MCVLCPlayer::~MCVLCPlayer()
 {
+#if defined(TARGET_PLATFORM_WINDOWS)
     vlc_log("[VLC] ~MCVLCPlayer() destructing m_view=%p m_play_pending=%d\n",
             m_view, (int)m_play_pending);
+#else
+    vlc_log("[VLC] ~MCVLCPlayer() destructing m_view=%p\n", m_view);
+#endif
 
     // Stop any pending offscreen decode.
     if (m_offscreen_bitmap != nullptr)
@@ -1334,6 +1384,19 @@ MCVLCPlayer::~MCVLCPlayer()
         }
         m_view = nullptr;
     }
+#elif defined(TARGET_PLATFORM_LINUX)
+    if (m_view != nullptr)
+    {
+        x11::Display *t_dpy = x11::gdk_x11_display_get_xdisplay(
+            gdk_display_get_default());
+        x11::XDestroyWindow(t_dpy, (x11::Window)(uintptr_t)m_view);
+        if (m_colormap != 0)
+        {
+            x11::XFreeColormap(t_dpy, m_colormap);
+            m_colormap = 0;
+        }
+        m_view = nullptr;
+    }
 #endif
 
     MCMemoryDeleteArray(m_markers);
@@ -1391,14 +1454,18 @@ void MCVLCPlayer::Synchronize()
 #elif defined(TARGET_PLATFORM_LINUX)
     if (m_view != nullptr)
     {
-        GdkWindow *t_win = (GdkWindow *)m_view;
-        gdk_window_move_resize(t_win,
-                               m_rect.x, m_rect.y,
-                               m_rect.width, m_rect.height);
+        x11::Display *t_dpy = x11::gdk_x11_display_get_xdisplay(
+            gdk_display_get_default());
+        x11::Window t_win = (x11::Window)(uintptr_t)m_view;
+        int t_w = m_rect.width  > 0 ? m_rect.width  : 1;
+        int t_h = m_rect.height > 0 ? m_rect.height : 1;
+        x11::XMoveResizeWindow(t_dpy, t_win,
+                               m_rect.x, m_rect.y, t_w, t_h);
         if (m_visible)
-            gdk_window_show_unraised(t_win);
+            x11::XMapWindow(t_dpy, t_win);
         else
-            gdk_window_hide(t_win);
+            x11::XUnmapWindow(t_dpy, t_win);
+        x11::XFlush(t_dpy);
     }
 #endif
 }
@@ -1415,9 +1482,9 @@ void MCVLCPlayer::AttachNativeView()
     if (m_view != nullptr)
         libvlc_media_player_set_hwnd(m_player, m_view);
 #elif defined(TARGET_PLATFORM_LINUX)
-    // XID is stored as a uintptr_t in m_view.
-    libvlc_media_player_set_xwindow(m_player,
-                                    (uint32_t)(uintptr_t)m_view);
+    if (m_view != nullptr)
+        libvlc_media_player_set_xwindow(m_player,
+                                        (uint32_t)(uintptr_t)m_view);
 #endif
 }
 
@@ -1701,35 +1768,84 @@ bool MCVLCPlayer::SetNativeParentView(void *p_parent_view)
     vlc_log("[VLC] HWND %p given to libvlc_media_player_set_hwnd\n",
             (void *)m_view);
 #elif defined(TARGET_PLATFORM_LINUX)
-    // Obtain the X11 window ID from the GDK parent window.
+    vlc_log("[VLC] SetNativeParentView: parent=%p rect=(%d,%d,%dx%d)\n",
+            p_parent_view, m_rect.x, m_rect.y, m_rect.width, m_rect.height);
+
     if (p_parent_view == nullptr)
+    {
+        vlc_log("[VLC] SetNativeParentView: parent is NULL\n");
         return false;
+    }
 
-    GdkWindow *t_parent = (GdkWindow *)p_parent_view;
-    GdkWindowAttr t_wa;
-    t_wa.colormap    = nullptr;
-    t_wa.x           = m_rect.x;
-    t_wa.y           = m_rect.y;
-    t_wa.width       = m_rect.width  > 0 ? m_rect.width  : 1;
-    t_wa.height      = m_rect.height > 0 ? m_rect.height : 1;
-    t_wa.event_mask  = 0;
-    t_wa.wclass      = GDK_INPUT_OUTPUT;
-    t_wa.window_type = GDK_WINDOW_CHILD;
+    // Use raw X11 child window instead of GDK — VLC's xcb video output
+    // does not render into GDK-managed windows.
+    GdkWindow *t_gdk_parent = (GdkWindow *)p_parent_view;
+    x11::Window t_parent_xid = x11::gdk_x11_drawable_get_xid(
+        (GdkDrawable *)t_gdk_parent);
+    x11::Display *t_dpy = x11::gdk_x11_display_get_xdisplay(
+        gdk_display_get_default());
 
-    GdkWindow *t_win = gdk_window_new(t_parent, &t_wa,
-                                      GDK_WA_X | GDK_WA_Y);
-    if (t_win == nullptr)
-        return false;
+    int t_x = m_rect.x;
+    int t_y = m_rect.y;
+    int t_w = m_rect.width  > 0 ? m_rect.width  : 1;
+    int t_h = m_rect.height > 0 ? m_rect.height : 1;
 
     if (m_view != nullptr)
-        gdk_window_destroy((GdkWindow *)m_view);
+    {
+        x11::XDestroyWindow(t_dpy, (x11::Window)(uintptr_t)m_view);
+        m_view = nullptr;
+    }
+    if (m_colormap != 0)
+    {
+        x11::XFreeColormap(t_dpy, m_colormap);
+        m_colormap = 0;
+    }
 
-    m_view = t_win;
-    uint32_t t_xid = gdk_x11_drawable_get_xid(t_win);
-    libvlc_media_player_set_xwindow(m_player, t_xid);
+    // Use a 24-bit (non-ARGB) visual to prevent transparency under
+    // compositing WMs.  GDK may use a 32-bit ARGB visual for its
+    // windows; child windows inherit that visual, and VLC's xcb output
+    // leaves the alpha byte at 0 — making every pixel transparent.
+    x11::Window t_win = 0;
+    x11::XVisualInfo t_vinfo;
+    int t_screen = x11::XDefaultScreen(t_dpy);
+    if (x11::XMatchVisualInfo(t_dpy, t_screen, 24, TrueColor, &t_vinfo))
+    {
+        m_colormap = x11::XCreateColormap(
+            t_dpy, t_parent_xid, t_vinfo.visual, AllocNone);
+        x11::XSetWindowAttributes t_attrs;
+        memset(&t_attrs, 0, sizeof(t_attrs));
+        t_attrs.background_pixel = 0;
+        t_attrs.border_pixel = 0;
+        t_attrs.colormap = m_colormap;
+        t_win = x11::XCreateWindow(
+            t_dpy, t_parent_xid, t_x, t_y, t_w, t_h,
+            0, t_vinfo.depth, InputOutput, t_vinfo.visual,
+            CWBackPixel | CWBorderPixel | CWColormap, &t_attrs);
+    }
+    else
+    {
+        t_win = x11::XCreateSimpleWindow(
+            t_dpy, t_parent_xid, t_x, t_y, t_w, t_h, 0, 0, 0);
+    }
 
-    if (m_visible)
-        gdk_window_show_unraised(t_win);
+    if (t_win == 0)
+    {
+        if (m_colormap != 0)
+        {
+            x11::XFreeColormap(t_dpy, m_colormap);
+            m_colormap = 0;
+        }
+        return false;
+    }
+
+    x11::XMapWindow(t_dpy, t_win);
+    x11::XFlush(t_dpy);
+
+    m_view = (void *)(uintptr_t)t_win;
+
+    vlc_log("[VLC] SetNativeParentView: xid=%lu view=%p\n",
+            (unsigned long)t_win, m_view);
+    libvlc_media_player_set_xwindow(m_player, (uint32_t)t_win);
 #elif defined(TARGET_PLATFORM_MACOS_X)
     // Add the player view as a subview of the stack window's content view.
     MCVLCReparentNSView(m_view, p_parent_view);
@@ -2112,6 +2228,14 @@ void MCVLCPlayer::Start(double rate)
     }
 #endif
 
+#if defined(TARGET_PLATFORM_LINUX)
+    if (m_view != nullptr)
+    {
+        uint32_t t_xid = (uint32_t)(uintptr_t)m_view;
+        libvlc_media_player_set_xwindow(m_player, t_xid);
+        vlc_log("[VLC] Start: re-set xwindow=%u\n", t_xid);
+    }
+#endif
     libvlc_media_player_play(m_player);
     libvlc_media_player_set_rate(m_player, (float)rate);
     m_playing = true;
@@ -2208,10 +2332,15 @@ void MCVLCPlayer::SetProperty(MCPlatformPlayerProperty p_property,
         // --- geometry ---
         case kMCPlatformPlayerPropertyRect:
             m_rect = *(MCRectangle *)p_value;
+#if defined(TARGET_PLATFORM_WINDOWS)
             vlc_log("[VLC] SetProperty(rect): m_rect=(%d,%d,%dx%d) "
                     "m_play_pending=%d\n",
                     m_rect.x, m_rect.y, m_rect.width, m_rect.height,
                     (int)m_play_pending);
+#else
+            vlc_log("[VLC] SetProperty(rect): m_rect=(%d,%d,%dx%d)\n",
+                    m_rect.x, m_rect.y, m_rect.width, m_rect.height);
+#endif
 #if defined(TARGET_PLATFORM_WINDOWS)
             // Primary deferred-play trigger: the engine has set the player's
             // bounds.  If a play is waiting on the HWND becoming non-zero, fire
@@ -2267,6 +2396,15 @@ void MCVLCPlayer::SetProperty(MCPlatformPlayerProperty p_property,
             if (t_new_offscreen == m_offscreen)
                 break;
             m_offscreen = t_new_offscreen;
+#if defined(TARGET_PLATFORM_LINUX)
+            if (m_offscreen && m_view != nullptr)
+            {
+                x11::Display *t_dpy = x11::gdk_x11_display_get_xdisplay(
+                    gdk_display_get_default());
+                x11::XUnmapWindow(t_dpy, (x11::Window)(uintptr_t)m_view);
+                x11::XFlush(t_dpy);
+            }
+#endif
             if (m_media != nullptr)
             {
                 // Re-attach VLC to the correct output.
@@ -2274,8 +2412,17 @@ void MCVLCPlayer::SetProperty(MCPlatformPlayerProperty p_property,
                 if (m_offscreen)
                     SetupOffscreenCallbacks();
                 else
+                {
                     AttachNativeView();
+                    Synchronize();
+                }
             }
+#if defined(TARGET_PLATFORM_LINUX)
+            else if (!m_offscreen)
+            {
+                Synchronize();
+            }
+#endif
             break;
         }
 
@@ -2424,11 +2571,13 @@ void MCVLCPlayer::GetProperty(MCPlatformPlayerProperty p_property,
             break;
 
         case kMCPlatformPlayerPropertyCurrentTime:
+        {
+            libvlc_time_t t_time = (m_player != nullptr)
+                ? libvlc_media_player_get_time(m_player) : 0;
             *(MCPlatformPlayerDuration *)r_value =
-                (m_player != nullptr)
-                    ? (MCPlatformPlayerDuration)libvlc_media_player_get_time(m_player)
-                    : 0;
+                (t_time >= 0) ? (MCPlatformPlayerDuration)t_time : 0;
             break;
+        }
 
         case kMCPlatformPlayerPropertyStartTime:
             *(MCPlatformPlayerDuration *)r_value = m_selection_start;

@@ -65,7 +65,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define PLATFORM_STRING "Linux"
 
 #define MCSSL
-#define FEATURE_MPLAYER
+#define FEATURE_PLATFORM_PLAYER
 #define FEATURE_NOTIFY 1
 
 #elif defined(_WINDOWS_SERVER)

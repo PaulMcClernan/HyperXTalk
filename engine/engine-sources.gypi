@@ -699,6 +699,7 @@
 			'src/lnxkeymapping.cpp',
 			'src/lnxmisc.cpp',
 			'src/lnxmplayer.cpp',
+			'src/lnx-core-compat.cpp',
 			'src/lnxpsprinter.cpp',
 			'src/lnxspec.cpp',
 			'src/lnxstack.cpp',
@@ -1247,7 +1248,8 @@
 				{
 					'sources!':
 					[
-						'src/player-platform.cpp',
+						'src/player-legacy.cpp',
+						'src/lnxmplayer.cpp',
 						'src/tilecachegl.cpp',
 						'src/tilecachegl3.x.cpp',
 						'src/glcontext.cpp',

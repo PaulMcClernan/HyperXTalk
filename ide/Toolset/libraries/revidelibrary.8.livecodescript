@@ -5246,7 +5246,10 @@ private on __setPropertyOfObject pObject, pProperty, pValue
    if tProperties["properties"][pProperty]["setter"] is not empty then
       dispatch tProperties["properties"][pProperty]["setter"] with pObject, pProperty, pValue
    else
-      set the pProperty of pObject to pValue
+      try
+         set the pProperty of pObject to pValue
+      catch tError
+      end try
    end if
    
 end __setPropertyOfObject

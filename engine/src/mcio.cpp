@@ -89,7 +89,7 @@ void IO_cleanprocesses()
 		        && (MCprocesses[i].ihandle == NULL
 		            || MCS_eof(MCprocesses[i].ihandle)))
 		{
-#ifdef X11
+#ifdef FEATURE_MPLAYER
 			if (MCprocesses[i].mode == OM_VCLIP)
 			{
 				MCPlayerHandle t_player = MCplayers;

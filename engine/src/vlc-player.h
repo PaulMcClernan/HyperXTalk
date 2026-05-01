@@ -116,7 +116,10 @@ private:
     struct libvlc_media_t        *m_media;
 
     // -- Platform-specific native view / window handle -----------------------
-    void *m_view;       // NSView* on Mac, HWND on Win, (unused) on Linux
+    void *m_view;       // NSView* on Mac, HWND on Win, X11 Window on Linux
+#if defined(TARGET_PLATFORM_LINUX)
+    unsigned long m_colormap;
+#endif
 
     // -- Playback state ------------------------------------------------------
     MCRectangle m_rect;
