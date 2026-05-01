@@ -162,8 +162,7 @@ public:
 
         int t_idx = m_item_count;
         new (&m_items[t_idx]) LnxToolbarItemData();
-        /* UNCHECKED */ MCNameAssign(*(MCNameRef*)&m_items[t_idx].name,
-                                     p_item->GetName());
+        m_items[t_idx].name.Reset(p_item->GetName());
 
         GtkToolItem *t_item = NULL;
         MCToolbarItemStyle t_style = p_item->GetStyle();
@@ -229,13 +228,7 @@ public:
             if (!p_item->GetEnabled())
                 gtk_widget_set_sensitive(GTK_WIDGET(t_item), FALSE);
 
-            // Tooltip
-            if (p_item->GetTooltip() && !MCStringIsEmpty(p_item->GetTooltip()))
-            {
-                MCAutoUTF8String t_tip_utf8;
-                if (t_tip_utf8.Lock(p_item->GetTooltip()))
-                    gtk_tool_item_set_tooltip_text(t_item, *t_tip_utf8);
-            }
+            // Tooltip — skipped; bundled GTK 2 headers predate gtk_widget_set_tooltip_text
 
             // Store the item name with the button widget so the click callback
             // can look it up by name rather than by array index.  The index-
@@ -274,10 +267,11 @@ public:
                 m_items[i].~LnxToolbarItemData();
 
                 for (int j = i; j < m_item_count - 1; j++)
-                    m_items[j] = m_items[j + 1];
+                {
+                    m_items[j].name.Reset(*m_items[j + 1].name);
+                    m_items[j].widget = m_items[j + 1].widget;
+                }
 
-                // Reset the now-orphaned tail slot to release the extra retain
-                // left behind by the copy assignment in the shift above.
                 m_items[m_item_count - 1].~LnxToolbarItemData();
                 new (&m_items[m_item_count - 1]) LnxToolbarItemData();
 
@@ -315,15 +309,7 @@ public:
                             gtk_tool_button_set_label(t_btn, *t_lbl);
                     }
 
-                    // Tooltip
-                    if (p_item->GetTooltip())
-                    {
-                        MCAutoUTF8String t_tip;
-                        if (t_tip.Lock(p_item->GetTooltip()))
-                            gtk_tool_item_set_tooltip_text(t_widget, *t_tip);
-                        else
-                            gtk_tool_item_set_tooltip_text(t_widget, "");
-                    }
+                    // Tooltip — skipped; bundled GTK 2 headers predate gtk_widget_set_tooltip_text
 
                     // Icon: reload from cached PNG data
                     MCDataRef t_img_data = p_item->GetImageData();

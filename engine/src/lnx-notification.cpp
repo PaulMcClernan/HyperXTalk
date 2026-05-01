@@ -37,6 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <dbus/dbus.h>
 #include <string>
+#include <vector>
 #include <unordered_map>
 #include <mutex>
 #include <cstdint>
