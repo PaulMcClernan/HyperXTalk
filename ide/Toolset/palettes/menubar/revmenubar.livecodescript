@@ -2855,7 +2855,13 @@ on revMenubarFileMenuPick pWhich
                   revIDESetPreference "cRecentStackPaths", empty
                   ideMessageSend "ideRecentFilesChanged"
                else
-                  revIDEOpenStack tRecentStack
+                  if tRecentStack ends with ".hyperxtalk_project" then
+                     -- The stored path is the inner JSON file (platform-neutral).
+                     -- Pass it straight to the project loader.
+                     revIDELoadFromProject tRecentStack
+                  else
+                     revIDEOpenStack tRecentStack
+                  end if
                end if
                break
             case "Import As Control"

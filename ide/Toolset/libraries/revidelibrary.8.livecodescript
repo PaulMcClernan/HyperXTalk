@@ -6991,17 +6991,23 @@ on revIDEActionOpenStack
    put the result into tStackFilePaths
    
    repeat for each line tStackFilePath in tStackFilePaths
-      -- Route .hyperxtalk_project folders to the project loader
+      -- Route .hyperxtalk_project to the project loader
       if tStackFilePath ends with ".hyperxtalk_project" then
-         --         local tProjectFilePath, tBundleLeaf, tProjectBaseName, tSavedDelim
-         --         put the itemDelimiter into tSavedDelim
-         --         set the itemDelimiter to "/"
-         --         put the last item of tStackFilePath into tBundleLeaf
-         --         set the itemDelimiter to tSavedDelim
-         --         put char 1 to (length(tBundleLeaf) - length(".hyperxtalk_project")) of tBundleLeaf into tProjectBaseName
-         --         put tStackFilePath & "/" & tProjectBaseName & ".hyperxtalk_project" into tProjectFilePath
-         --         revIDELoadFromProject tProjectFilePath
-         revIDELoadFromProject tStackFilePath
+         local tProjectFilePath
+         if there is a file tStackFilePath then
+            -- Windows / Linux: user opened the JSON file directly
+            put tStackFilePath into tProjectFilePath
+         else
+            -- macOS: user selected the package folder; construct the inner JSON path
+            local tBundleLeaf, tProjectBaseName, tSavedDelim
+            put the itemDelimiter into tSavedDelim
+            set the itemDelimiter to "/"
+            put the last item of tStackFilePath into tBundleLeaf
+            set the itemDelimiter to tSavedDelim
+            put char 1 to (length(tBundleLeaf) - length(".hyperxtalk_project")) of tBundleLeaf into tProjectBaseName
+            put tStackFilePath & "/" & tProjectBaseName & ".hyperxtalk_project" into tProjectFilePath
+         end if
+         revIDELoadFromProject tProjectFilePath
       else
          # Check the stack exists
          if there is not a file tStackFilePath then exit revIDEActionOpenStack
@@ -7674,6 +7680,25 @@ on revIDESaveStack pStackID
       send "revSaveStackRequest" to this card of stack tStack
    end repeat
    
+   # If this stack was loaded from a project file, redirect to the project saver.
+   # Check the mainStack too in case a substack is being saved.
+   local tProjectFilePath, tProjectStackID
+   if the cRevProjectFilePath of stack tStackName is not empty then
+      put the cRevProjectFilePath of stack tStackName into tProjectFilePath
+      put the long ID of stack tStackName into tProjectStackID
+   else
+      local tMainStackName
+      put the mainStack of stack tStackName into tMainStackName
+      if tMainStackName is not empty and the cRevProjectFilePath of stack tMainStackName is not empty then
+         put the cRevProjectFilePath of stack tMainStackName into tProjectFilePath
+         put the long ID of stack tMainStackName into tProjectStackID
+      end if
+   end if
+   if tProjectFilePath is not empty then
+      revIDESaveAsProject tProjectStackID, tProjectFilePath
+      exit revIDESaveStack
+   end if
+
    # Check if the stack has a filename. IF not, redirect to save as
    if the effective filename of stack tStackName is empty then
       revIDEActionSaveStackAs the long ID of stack tStackName
@@ -7952,7 +7977,7 @@ on revIDEActionSaveStackAs pStackID, pSubstackOnly
    --   put (revIDELocalise("Legacy LiveCode Stack (8.0)") & "|livecode,rev|RSTK") into tStack80Filter
    
    local tProjectFilter
-   put (revIDELocalise("HyperXTalk Project") & "|hyperxtalk_project|RPRJ") into tProjectFilter
+   --   put (revIDELocalise("HyperXTalk Project") & "|hyperxtalk_project|RPRJ") into tProjectFilter
    
    local tVersion
    switch 
@@ -8130,8 +8155,20 @@ on revIDESaveAsProject pStackID, pFolderPath
    -- e.g. "/Users/emily/Documents/MyStack.hyperxtalk_project"
    -- The main JSON file inside takes the same name as the folder.
 
-   -- Create the project folder
-   if there is no folder pFolderPath then
+   -- Derive base project name from folder (strip .hyperxtalk_project suffix)
+   local tSavedItemDelim2, tFolderLeaf, tBaseName
+   put the itemDelimiter into tSavedItemDelim2
+   set the itemDelimiter to "/"
+   put the last item of pFolderPath into tFolderLeaf
+   set the itemDelimiter to tSavedItemDelim2
+   put char 1 to (length(tFolderLeaf) - length(".hyperxtalk_project")) of tFolderLeaf into tBaseName
+
+   -- Create the project folder if it doesn't already exist.
+   -- On macOS, .hyperxtalk_project packages report false for "there is a folder",
+   -- so also check for the inner JSON file as proof the package already exists.
+   local tMainFilePath
+   put pFolderPath & "/" & tBaseName & ".hyperxtalk_project" into tMainFilePath
+   if there is no folder pFolderPath and there is not a file tMainFilePath then
       create folder pFolderPath
       if the result is not empty then
          answer revIDELocalise("Could not create project folder:") & return & the result
@@ -8158,16 +8195,7 @@ on revIDESaveAsProject pStackID, pFolderPath
    local tJSON
    put jsonExport(tTree) into tJSON
 
-   -- Derive base project name from folder (strip .hyperxtalk_project suffix)
-   local tSavedItemDelim2, tFolderLeaf, tBaseName
-   put the itemDelimiter into tSavedItemDelim2
-   set the itemDelimiter to "/"
-   put the last item of pFolderPath into tFolderLeaf
-   set the itemDelimiter to tSavedItemDelim2
-   put char 1 to (length(tFolderLeaf) - length(".hyperxtalk_project")) of tFolderLeaf into tBaseName
-
    -- Write the main project JSON file
-   local tMainFilePath
    put pFolderPath & "/" & tBaseName & ".hyperxtalk_project" into tMainFilePath
    open file tMainFilePath for write
    if the result is not empty then
@@ -8176,6 +8204,13 @@ on revIDESaveAsProject pStackID, pFolderPath
    end if
    write tJSON to file tMainFilePath
    close file tMainFilePath
+
+   -- Export first-card preview as preview.png inside the bundle.
+   -- Being part of the package it travels with the file automatically.
+   local tStackName, tPreviewPath
+   put the short name of pStackID into tStackName
+   put pFolderPath & "/preview.png" into tPreviewPath
+   export snapshot from card 1 of stack tStackName to file tPreviewPath as PNG
 
    -- Mark the stack as saved and update recent files
    revIDESetUnedited the short name of pStackID
@@ -8324,6 +8359,11 @@ on revIDEProjectSerializeControl pControlID, pMediaFolder, @rObj
       end if
    end if
 
+   -- Widget: save the kind so we can recreate it (kind is set at create time, not via properties)
+   if tType is "widget" then
+      put the kind of pControlID into rObj["widgetKind"]
+   end if
+
    -- Custom properties
    revIDEProjectSerializeCustomProps pControlID, rObj
 
@@ -8449,6 +8489,10 @@ on revIDELoadFromProject pFilePath
       end if
    end repeat
    if tNewStackName is not empty then
+      -- Store the project FOLDER path so Save knows to update the project rather
+      -- than prompt for a new .hyperxtalk file. tFolderPath is the package folder
+      -- (parent of the inner JSON file), which is what revIDESaveAsProject expects.
+      set the cRevProjectFilePath of stack tNewStackName to tFolderPath
       revIDEAddRecentStack pFilePath
       unlock screen
       go stack tNewStackName
@@ -8633,6 +8677,16 @@ on revIDEProjectReconstructControl pControlNode, pStackName, pCardID, pGroupID, 
          put it into tControlRef
          put the id of tControlRef into tNewControlID
          break
+         
+      case "widget"
+         if pControlNode["widgetKind"] is empty then exit revIDEProjectReconstructControl
+         local tWidgetKind
+         put pControlNode["widgetKind"] into tWidgetKind
+         create widget as tWidgetKind in tTarget
+         put it into tControlRef
+         put the id of tControlRef into tNewControlID
+         break
+         
       default
          -- Unknown type, skip
          exit revIDEProjectReconstructControl
