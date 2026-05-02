@@ -8432,6 +8432,7 @@ on revIDELoadFromProject pFilePath
    end if
    local tStackNode, tNewStackName
    put tTree["stack"] into tStackNode
+   lock screen
    -- tDeferredBehaviors collects {controlRef, behaviorName, behaviorStack} entries
    -- from all controls across all stacks/substacks, resolved after full reconstruction
    local tDeferredBehaviors
@@ -8449,7 +8450,10 @@ on revIDELoadFromProject pFilePath
    end repeat
    if tNewStackName is not empty then
       revIDEAddRecentStack pFilePath
+      unlock screen
       go stack tNewStackName
+   else
+      unlock screen
    end if
 end revIDELoadFromProject
 
@@ -8522,6 +8526,7 @@ on revIDEProjectReconstructStack pStackNode, pFolderPath, pParentStackName, @pDe
          put the result into tSubName
          if tSubName is not empty then
             set the mainStack of stack tSubName to tNewStackName
+            close stack tSubName
          end if
       end repeat
    end if
