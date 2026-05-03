@@ -157,8 +157,6 @@
 				'libraries/macosfsevents/macosfsevents.lcb',
 				'libraries/macoskeychain/macoskeychain.lcb',
 				'libraries/macosmenubar/macosmenubar.lcb',
-				'libraries/macostoolbar/macostoolbar.lcb',
-				'libraries/macosusernotifications/macosusernotifications.lcb',
 
 				#'widgets/androidbutton/androidbutton.lcb',  # Android-only, no androidutils on macOS
 				#'widgets/androidfield/androidfield.lcb',    # Android-only

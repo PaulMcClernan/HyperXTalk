@@ -961,6 +961,49 @@ public:
 	virtual void exec_ctxt(MCExecContext &);
 };
 
+// ---------------------------------------------------------------------------
+// Notification commands
+
+class MCRequestNotificationPermission : public MCStatement
+{
+public:
+    virtual ~MCRequestNotificationPermission();
+    virtual Parse_stat parse(MCScriptPoint &);
+    virtual void exec_ctxt(MCExecContext &);
+};
+
+class MCShowNotification : public MCStatement
+{
+    MCExpression *m_title;
+    MCExpression *m_body;
+    MCExpression *m_tag;
+public:
+    MCShowNotification() : m_title(nil), m_body(nil), m_tag(nil) {}
+    virtual ~MCShowNotification();
+    virtual Parse_stat parse(MCScriptPoint &);
+    virtual void exec_ctxt(MCExecContext &);
+};
+
+class MCCancelNotification : public MCStatement
+{
+    MCExpression *m_tag;
+public:
+    MCCancelNotification() : m_tag(nil) {}
+    virtual ~MCCancelNotification();
+    virtual Parse_stat parse(MCScriptPoint &);
+    virtual void exec_ctxt(MCExecContext &);
+};
+
+class MCCancelAllNotifications : public MCStatement
+{
+public:
+    virtual ~MCCancelAllNotifications();
+    virtual Parse_stat parse(MCScriptPoint &);
+    virtual void exec_ctxt(MCExecContext &);
+};
+
+// ---------------------------------------------------------------------------
+
 class MCClickCmd : public MCStatement
 {
 	MCExpression *button;

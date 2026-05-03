@@ -43,6 +43,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "image.h"
 #include "field.h"
+#ifndef _SERVER
+#include "toolbar.h"
+#endif
 #include "mcerror.h"
 #include "util.h"
 #include "date.h"
@@ -299,6 +302,9 @@ MCScrollbar *MCtemplatescrollbar;
 MCPlayer *MCtemplateplayer;
 MCImage *MCtemplateimage;
 MCField *MCtemplatefield;
+#ifndef _SERVER
+MCToolbar *MCtemplatetoolbar;
+#endif
 
 MCImageHandle MCmagimage;
 MCMagnifyHandle MCmagnifier;
@@ -1164,6 +1170,9 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCtemplateplayer = new (nothrow) MCPlayer;
 	MCtemplateimage = new (nothrow) MCImage;
 	MCtemplatefield = new (nothrow) MCField;
+#ifndef _SERVER
+	MCtemplatetoolbar = new (nothrow) MCToolbar;
+#endif
 	
 	MCtooltip = new (nothrow) MCTooltip;
 

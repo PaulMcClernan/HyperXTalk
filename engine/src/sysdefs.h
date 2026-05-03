@@ -1359,6 +1359,7 @@ enum Chunk_term {
     CT_MAGNIFY,
     CT_COLOR_PALETTE,
     CT_WIDGET,
+    CT_TOOLBAR,
     CT_FIELD,
 	CT_LAST_CONTROL = CT_FIELD,
 	

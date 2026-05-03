@@ -11,6 +11,9 @@ on:
         options:
           - Release
           - Debug
+  push:
+    tags:
+      - 'v*'
 
 jobs:
 
@@ -41,7 +44,7 @@ jobs:
       - name: Build prebuilt third-party libraries
         run: make prebuilt-mac
         env:
-          BUILDTYPE: ${{ github.event.inputs.build_type }}
+          BUILDTYPE: ${{ inputs.build_type || 'Release' }}
 
       - name: Configure (GYP → Xcode projects)
         run: make config-mac
@@ -49,19 +52,17 @@ jobs:
       - name: Compile
         run: make compile-mac CODESIGN_IDENTITY="-"
         env:
-          BUILDTYPE: ${{ github.event.inputs.build_type }}
+          BUILDTYPE: ${{ inputs.build_type || 'Release' }}
 
       - name: Package (mac-bin)
         run: make package-mac-bin CODESIGN_IDENTITY="-"
         env:
-          BUILDTYPE: ${{ github.event.inputs.build_type }}
+          BUILDTYPE: ${{ inputs.build_type || 'Release' }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: HyperXTalk-macOS-ARM64-${{ github.event.inputs.build_type }}
-          # Upload the whole mac-bin folder — contains HyperXTalk.app plus
-          # all externals, support files, and standalone engine.
+          name: HyperXTalk-macOS-ARM64-${{ inputs.build_type || 'Release' }}
           path: mac-bin/
           retention-days: 30
 
@@ -82,12 +83,13 @@ jobs:
           sudo apt-get install -y \
             build-essential python3 python3-pip pkg-config \
             libssl-dev libcurl4-openssl-dev \
-            libgtk2.0-dev libglib2.0-dev \
+            libgtk-3-dev libglib2.0-dev \
             libpng-dev libjpeg-dev libfreetype6-dev libfontconfig1-dev \
             libx11-dev libxext-dev libxrender-dev \
-            libxinerama-dev libxrandr-dev libxcb1-dev \
+            libxinerama-dev libxrandr-dev libxcb1-dev libxv-dev libdbus-1-dev libcups2-dev \
             libgif-dev libpcre3-dev zlib1g-dev \
-            default-jdk
+            default-jdk \
+            fuse libfuse2
 
       - name: Configure (GYP → Makefiles)
         run: ./config.sh --platform linux-x86_64
@@ -95,14 +97,29 @@ jobs:
       - name: Compile
         run: make compile-linux-x86_64
         env:
-          BUILDTYPE: ${{ github.event.inputs.build_type }}
+          BUILDTYPE: ${{ inputs.build_type || 'Release' }}
 
-      - name: Upload artifact
+      - name: Build AppImage
+        run: |
+          chmod +x packaging/linux/build-appimage.sh
+          ./packaging/linux/build-appimage.sh \
+            build-linux-x86_64/livecode \
+            "${{ inputs.build_type || 'Release' }}"
+
+      - name: Upload AppImage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: HyperXTalk-Linux-x86_64-${{ github.event.inputs.build_type }}
+          name: HyperXTalk-Linux-x86_64-AppImage
+          path: build-linux-x86_64/livecode/HyperXTalk-*.AppImage
+          retention-days: 30
+
+      - name: Upload raw build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HyperXTalk-Linux-x86_64-${{ inputs.build_type || 'Release' }}
           path: linux-x86_64-bin/
           retention-days: 30
+          if-no-files-found: ignore
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Windows x86_64
@@ -254,7 +271,47 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: HyperXTalk-Windows-x86_64-${{ github.event.inputs.build_type }}
+          name: HyperXTalk-Windows-x86_64-${{ inputs.build_type || 'Release' }}
           # Release output: HyperXTalk.exe, standalone-community.exe, externals, DB drivers
           path: build-win-x86_64\livecode\Release\
           retention-days: 30
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Create GitHub Release (only on v* tags)
+  # ─────────────────────────────────────────────────────────────────────────────
+  release:
+    name: Create Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-macos, build-linux, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Package artifacts for release
+        run: |
+          cd artifacts
+          # Zip the macOS build
+          if [ -d "HyperXTalk-macOS-ARM64-Release" ]; then
+            (cd HyperXTalk-macOS-ARM64-Release && zip -r ../HyperXTalk-macOS-ARM64.zip .)
+          fi
+          # The AppImage is already a single file
+          cp HyperXTalk-Linux-x86_64-AppImage/*.AppImage . 2>/dev/null || true
+          # Zip the Windows build
+          if [ -d "HyperXTalk-Windows-x86_64-Release" ]; then
+            (cd HyperXTalk-Windows-x86_64-Release && zip -r ../HyperXTalk-Windows-x86_64.zip .)
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            artifacts/HyperXTalk-macOS-ARM64.zip
+            artifacts/HyperXTalk-*.AppImage
+            artifacts/HyperXTalk-Windows-x86_64.zip

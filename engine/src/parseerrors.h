@@ -118,6 +118,9 @@ enum Parse_errors
 	
 	// {PE-0030} cancel: bad message expression
 	PE_CANCEL_BADEXP,
+
+	// cancelNotification: bad tag expression
+	PE_CANCELNOTIFICATION_BADTAG,
 	
 	// {PE-0031} charToNum: bad parameter
 	PE_CHARTONUM_BADPARAM,
@@ -1174,6 +1177,9 @@ enum Parse_errors
 	
 	// {PE-0381} show: error in object expression
 	PE_SHOW_BADTARGET,
+
+	// showNotification: bad title expression
+	PE_SHOWNOTIFICATION_BADTITLE,
 	
 	// {PE-0382} sin: bad parameter
 	PE_SIN_BADPARAM,

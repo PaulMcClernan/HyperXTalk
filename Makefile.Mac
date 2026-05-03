@@ -368,6 +368,9 @@ package-mac:
 	@[ -d "$(MAC_BIN)/packaged_extensions" ] && \
 	    cp -R "$(MAC_BIN)/packaged_extensions/." \
 	      "$(TOOLS_DIR)/Extensions/" || true
+	@# Remove the old macostoolbar LCB extension now that its functionality
+	@# is built into the engine as a native MCToolbar object.
+	@rm -rf "$(TOOLS_DIR)/Extensions/com.hyperxtalk.macostoolbar"
 	@# ----------------------------------------------------------------
 	@# Support: licence and about text
 	@# ----------------------------------------------------------------
@@ -599,6 +602,9 @@ package-mac-bin:
 	@[ -d "$(MACBIN_BIN)/packaged_extensions" ] && \
 	    cp -R "$(MACBIN_BIN)/packaged_extensions/." \
 	      "$(MACBIN_TOOLS)/Extensions/" || true
+	@# Remove the old macostoolbar LCB extension now that its functionality
+	@# is built into the engine as a native MCToolbar object.
+	@rm -rf "$(MACBIN_TOOLS)/Extensions/com.hyperxtalk.macostoolbar"
 	@# ----------------------------------------------------------------
 	@# Support: licence and about text
 	@# ----------------------------------------------------------------
