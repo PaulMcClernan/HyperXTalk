@@ -268,7 +268,6 @@ on setMenuProperties
          if revIDEGetPreference("cREVMenuBarTopLeft") is empty
          then set the loc of me to item 1 of revIDEStackScreenLoc(the short name of this stack), 54
          else 
-            put revIDEGetPreference("cREVMenuBarTopLeft")
             set the topLeft of me to revIDEGetPreference("cREVMenuBarTopLeft")
          end if
       end if
