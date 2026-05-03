@@ -34,12 +34,26 @@ Software Foundation.  */
     // Set by MCVLCDestroyNSView() to prevent the queued block from calling
     // back into a freed MCVLCPlayer.
     BOOL    _frameCancelled;
+
+    // Deferred self-destruction state.  MCVLCDestroyNSView() calls
+    // -markForDestruction which sets _destroyPending and tries to schedule
+    // teardown immediately.  If VLC still has a rendering subview
+    // (VLCVideoLayerView) at that point, teardown is deferred: the
+    // -didRemoveSubview: override retries when VLC removes its subview.
+    // This prevents use-after-free when VLC's background-thread cleanup
+    // dispatches to the main queue after the MCVLCPlayer C++ destructor
+    // has already returned.
+    BOOL    _destroyPending;    // -markForDestruction called; waiting for VLC subviews
+    BOOL    _destroyDispatched; // teardown dispatch_async already queued
 }
 - (void)setFrameReadyCallback:(void (*)(void *))callback opaque:(void *)opaque;
 - (void)cancelFrameCallback;
 // If the frame is already non-zero when the callback is armed, fire it on the
 // next run-loop turn rather than waiting for a future setFrame: transition.
 - (void)fireCallbackDeferredIfFrameReady;
+// Called by MCVLCDestroyNSView().  Cancels the frame callback and schedules
+// teardown for when all VLC rendering subviews have been removed.
+- (void)markForDestruction;
 @end
 
 @implementation MCVLCPlayerView
@@ -77,6 +91,110 @@ Software Foundation.  */
             cb(op);
         [view release];
     });
+}
+
+// ---------------------------------------------------------------------------
+// Deferred self-destruction
+// ---------------------------------------------------------------------------
+
+// Called by MCVLCDestroyNSView() after the C++ MCVLCPlayer is torn down.
+// Cancels the frame callback so it cannot fire into freed C++ memory, then
+// attempts to schedule teardown.  If VLC has a rendering subview present
+// (added by its vout module when play() was called), teardown is deferred
+// until -didRemoveSubview: confirms VLC has finished its own cleanup.
+- (void)markForDestruction
+{
+    fprintf(stderr, "[VLC-view] markForDestruction %p subviews=%lu superview=%p\n",
+            (void *)self, (unsigned long)[[self subviews] count],
+            (void *)[self superview]);
+    fflush(stderr);
+    [self cancelFrameCallback];
+    if (_destroyPending || _destroyDispatched)
+        return;
+
+    // Remove from superview immediately and synchronously.
+    //
+    // AppKit registers a view in window-level structures (key view loop,
+    // accessibility tree, display scheduling) when it is added as a subview.
+    // If the parent view is dealloc'd before the child is formally removed,
+    // those registrations become dangling.  When the child is later dealloc'd
+    // and NSView tries to unregister from them, it dereferences freed memory
+    // — SIGSEGV in [super dealloc].
+    //
+    // Calling removeFromSuperview here — while the C++ destructor is still
+    // on the call stack and the parent is guaranteed alive — ensures the view
+    // is cleanly unregistered from AppKit before anything is freed.
+    //
+    // Note: we do NOT release here.  MCVLCCreateNSView's alloc-reference
+    // (retain count = 1 on entry, or 2 if still in superview) keeps the view
+    // alive until -tryDestroy's dispatch_async teardown block fires.
+    if ([self superview] != nil)
+        [self removeFromSuperview];
+
+    _destroyPending = YES;
+    [self tryDestroy];
+}
+
+// Schedules the view's removal from its superview and final release, provided
+// all VLC rendering subviews are gone.  Safe to call multiple times; only the
+// first qualifying call dispatches the teardown block.
+- (void)tryDestroy
+{
+    if (!_destroyPending || _destroyDispatched)
+        return;
+
+    NSUInteger t_count = [[self subviews] count];
+    fprintf(stderr, "[VLC-view] tryDestroy %p subviews=%lu\n",
+            (void *)self, (unsigned long)t_count);
+    fflush(stderr);
+
+    // If VLC still has a rendering subview (e.g. VLCVideoLayerView), wait.
+    // -didRemoveSubview: will call us again when that subview is removed.
+    if (t_count > 0)
+        return;
+
+    _destroyDispatched = YES;
+    _destroyPending    = NO;
+
+    fprintf(stderr, "[VLC-view] tryDestroy %p dispatching teardown\n",
+            (void *)self);
+    fflush(stderr);
+
+    // Defer the final release by one main-queue turn.
+    //
+    // removeFromSuperview was already called synchronously in
+    // -markForDestruction, so we only need to release the view here.
+    // autorelease (rather than release) defers dealloc to the end of the
+    // run-loop iteration, after any pending Core Animation transactions
+    // involving the view's backing layer have committed — preventing a
+    // SIGSEGV if CA tries to draw into an otherwise already-freed layer.
+    //
+    // Ownership: the alloc-reference from MCVLCCreateNSView (retain count = 1
+    // after removeFromSuperview dropped the superview's reference) is balanced
+    // by the autorelease here: block-copy auto-retain (+1) is cancelled by
+    // block-dealloc auto-release (-1), leaving the autorelease as the sole
+    // pending -1, which fires at pool-drain time → count = 0 → dealloc.
+    dispatch_async(dispatch_get_main_queue(), ^{
+        fprintf(stderr, "[VLC-view] teardown block firing %p\n", (void *)self);
+        fflush(stderr);
+        [self autorelease];
+    });
+}
+
+// AppKit calls this whenever a subview is removed from this view.
+// When VLC removes its rendering subview (VLCVideoLayerView) as part of
+// its async vout teardown, we check whether it is now safe to proceed
+// with our own teardown.
+- (void)didRemoveSubview:(NSView *)subview
+{
+    [super didRemoveSubview:subview];
+    fprintf(stderr, "[VLC-view] didRemoveSubview %p removed=%p pending=%d dispatched=%d remaining=%lu\n",
+            (void *)self, (void *)subview,
+            (int)_destroyPending, (int)_destroyDispatched,
+            (unsigned long)[[self subviews] count]);
+    fflush(stderr);
+    if (_destroyPending && !_destroyDispatched)
+        [self tryDestroy];
 }
 
 - (BOOL)isOpaque
@@ -137,6 +255,17 @@ Software Foundation.  */
 
 - (void)dealloc
 {
+    fprintf(stderr,
+            "[VLC-view] dealloc %p window=%p superview=%p subviews=%lu "
+            "hidden=%d frame=(%.0f,%.0f,%.0f,%.0f)\n",
+            (void *)self,
+            (void *)[self window],
+            (void *)[self superview],
+            (unsigned long)[[self subviews] count],
+            (int)[self isHidden],
+            [self frame].origin.x,    [self frame].origin.y,
+            [self frame].size.width,  [self frame].size.height);
+    fflush(stderr);
     _frameReadyCb      = nullptr;
     _frameReadyOpaque  = nullptr;
     [super dealloc];
@@ -168,14 +297,21 @@ void MCVLCDestroyNSView(void *p_view)
 
     MCVLCPlayerView *t_view = (MCVLCPlayerView *)p_view;
 
-    // Prevent any queued setFrame: block from calling back into the player.
-    [t_view cancelFrameCallback];
-
-    // Remove from superview if it has one.
-    if ([t_view superview] != nil)
-        [t_view removeFromSuperview];
-
-    [t_view release];
+    // -markForDestruction cancels the frame-ready callback (so it cannot
+    // fire into the freed MCVLCPlayer C++ object) and schedules teardown.
+    //
+    // If VLC already removed its rendering subview (VLCVideoLayerView), the
+    // teardown dispatch_async is queued immediately.  If the subview is still
+    // present — because VLC's vout cleanup dispatched asynchronously and may
+    // not yet have fired — teardown is deferred: the -didRemoveSubview: override
+    // retries when VLC eventually removes the subview.  This avoids the
+    // use-after-free / malloc-free-list corruption that results from our teardown
+    // block racing ahead of VLC's background-thread cleanup blocks.
+    //
+    // Ownership: the alloc-reference from MCVLCCreateNSView (retain count = 1
+    // on entry) is passed to the view itself; it will be balanced by the
+    // autorelease inside the dispatch_async block that -tryDestroy queues.
+    [t_view markForDestruction];
 }
 
 void MCVLCReparentNSView(void *p_view, void *p_parent_view)

@@ -291,7 +291,9 @@ static void vlc_log(const char *fmt, ...)
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
     va_end(ap);
+    fflush(stderr);
 }
+
 #endif
 
 // ---------------------------------------------------------------------------
@@ -1397,9 +1399,39 @@ MCVLCPlayer::~MCVLCPlayer()
         // Without this, VLC's D3D renderer holds a dangling HWND reference
         // across the destructor, causing video output failure on the next open.
         libvlc_media_player_set_hwnd(m_player, nullptr);
+#elif defined(TARGET_PLATFORM_MACOS_X)
+        // NOTE: We intentionally do NOT call set_nsobject(nullptr) here.
+        //
+        // In earlier versions we called set_nsobject(nullptr) before stop() to
+        // detach VLC from the NSView eagerly.  However, VLC 3's macOS vout
+        // cleanup block (dispatched to the main queue by set_nsobject(nullptr))
+        // contains a bug: it calls free() on an Objective-C object allocated in
+        // the ObjC compressible zone (not the default malloc zone), triggering
+        // "pointer being freed was not allocated" → SIGABRT.
+        //
+        // We no longer need set_nsobject(nullptr) to protect the NSView:
+        // MCVLCPlayerView's markForDestruction + didRemoveSubview: mechanism
+        // keeps the view alive until VLC naturally removes VLCVideoLayerView
+        // during stop().  stop() triggers vout teardown via a different (safe)
+        // code path that does not exhibit the free()-on-ObjC-object bug.
 #endif
         libvlc_media_player_stop(m_player);
+        vlc_log("[VLC] ~MCVLCPlayer: stop done\n");
+#if defined(TARGET_PLATFORM_MACOS_X)
+        // On macOS, VLC 3's vout teardown code (triggered by stop()) dispatches
+        // main-queue cleanup blocks that contain memory-management bugs.  Calling
+        // libvlc_media_player_release() afterwards triggers malloc free-list
+        // inspection that detects those corruptions → SIGABRT.
+        //
+        // The same reasoning that keeps s_vlc_instance alive applies here:
+        // calling release() after stop() is not safe on macOS.  We keep the
+        // stopped player alive as a process-wide zombie.  stop() has already
+        // freed decoder/demux threads and decoded-picture queues; the residual
+        // player struct is a few hundred bytes.  The OS reclaims it on exit.
+        vlc_log("[VLC] ~MCVLCPlayer: player kept as zombie (no release) — macOS\n");
+#else
         libvlc_media_player_release(m_player);
+#endif
         m_player = nullptr;
     }
 
@@ -1408,6 +1440,7 @@ MCVLCPlayer::~MCVLCPlayer()
     {
         libvlc_media_release(m_media);
         m_media = nullptr;
+        vlc_log("[VLC] ~MCVLCPlayer: media release done\n");
     }
 
     // Destroy the native view.
@@ -1416,6 +1449,7 @@ MCVLCPlayer::~MCVLCPlayer()
     {
         MCVLCDestroyNSView(m_view);
         m_view = nullptr;
+        vlc_log("[VLC] ~MCVLCPlayer: DestroyNSView done\n");
     }
 #elif defined(TARGET_PLATFORM_WINDOWS)
     if (m_view != nullptr)
@@ -1458,6 +1492,7 @@ MCVLCPlayer::~MCVLCPlayer()
 #endif
 
     MCMemoryDeleteArray(m_markers);
+    vlc_log("[VLC] ~MCVLCPlayer: complete\n");
     ReleaseVLCInstance();
 }
 
