@@ -1497,6 +1497,7 @@ private function revMenubarFileMenu pContext
    
    put enableMenuItem("&Save/S", tCanSaveStack) & return after tFile
    put enableMenuItem("Save &As...", tCanSaveStack) & return after tFile
+   put enableMenuItem("Save as &Project...", tCanSaveStack) & return after tFile
    put enableMenuItem("Move S&ubstack to File...", tIsUserTarget and the short name of the topStack is not the mainStack of the topStack) & return after tFile
    put enableMenuItem("&Revert to Saved...", tIsUserTarget and the effective filename of the topStack is not empty) & return after tFile
    put "-" & return after tFile
@@ -2025,7 +2026,8 @@ private function revMenubarViewMenu pContext
    put toggleMenuItem("Rulers", the mode of stack "revRulersH" is not 0) & return after tView
    put toggleMenuItem("Grid", the grid) & return after tView
    put toggleMenuItem("Backdrop", the backdrop is not "none") & return after tView
-   put toggleMenuItem("Show IDE Stacks In Lists", gREVShowStacks) & return after tView
+   --   put toggleMenuItem("Show IDE Stacks In Lists", gREVShowStacks) & return after tView
+   put toggleMenuItem("Show IDE Stacks In Lists", revIDEGetPreference("cShowRevolutionStacks")) & return after tView
    put "-" & return after tView
    put toggleMenuItem("Show &Invisible Objects" , the showInvisibles) & return after tView
    
@@ -2803,6 +2805,9 @@ on revMenubarFileMenuPick pWhich
       case "Save As..."
          revIDEActionSaveStackAs the long id of the topStack
          break
+      case "Save as Project..."
+         revIDEActionSaveAsProject the long id of the topStack
+         break
       case "Save As Standalone Application..."
          revIDESaveAsStandalone the long id of the topStack
          break
@@ -2851,7 +2856,13 @@ on revMenubarFileMenuPick pWhich
                   revIDESetPreference "cRecentStackPaths", empty
                   ideMessageSend "ideRecentFilesChanged"
                else
-                  revIDEOpenStack tRecentStack
+                  if tRecentStack ends with ".hyperxtalk_project" then
+                     -- The stored path is the inner JSON file (platform-neutral).
+                     -- Pass it straight to the project loader.
+                     revIDELoadFromProject tRecentStack
+                  else
+                     revIDEOpenStack tRecentStack
+                  end if
                end if
                break
             case "Import As Control"
