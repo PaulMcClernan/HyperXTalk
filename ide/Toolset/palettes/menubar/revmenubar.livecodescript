@@ -17,9 +17,9 @@ on preOpenStack
    layoutMenu
    revIDEPositionPalette the short name of me
    
-   --   // HXT
-   --   set the backColor of me to (the systemWindowColor)
-   --   set the foregroundColor of me to (the systemTextColor)
+   // HXT
+   set the backColor of me to (the systemWindowColor)
+   set the foregroundColor of me to (the systemTextColor)
    
    dispatch "revIDEPositionPaletteDefault" to stack "revIDElibrary" with "revMenubar"
    
@@ -268,6 +268,7 @@ on setMenuProperties
          if revIDEGetPreference("cREVMenuBarTopLeft") is empty
          then set the loc of me to item 1 of revIDEStackScreenLoc(the short name of this stack), 54
          else 
+            put revIDEGetPreference("cREVMenuBarTopLeft")
             set the topLeft of me to revIDEGetPreference("cREVMenuBarTopLeft")
          end if
       end if
@@ -320,6 +321,7 @@ on ideToggleChanged pToggle
       default
          break
    end switch
+   
 end ideToggleChanged
 
 on idePluginsChanged
@@ -1495,6 +1497,7 @@ private function revMenubarFileMenu pContext
    
    put enableMenuItem("&Save/S", tCanSaveStack) & return after tFile
    put enableMenuItem("Save &As...", tCanSaveStack) & return after tFile
+   put enableMenuItem("Save as &Project...", tCanSaveStack) & return after tFile
    put enableMenuItem("Move S&ubstack to File...", tIsUserTarget and the short name of the topStack is not the mainStack of the topStack) & return after tFile
    put enableMenuItem("&Revert to Saved...", tIsUserTarget and the effective filename of the topStack is not empty) & return after tFile
    put "-" & return after tFile
@@ -2009,11 +2012,11 @@ private function revMenubarViewMenu pContext
    global gREVPalettes, gREVShowStacks
    
    local tView
-   put enableMenuItem("Go &First/1", the mode of the topStack <= 2 and not revIDEStackIsIDEStack(the topStack)) & return after tView
-   put enableMenuItem("Go Pre&v/2", the mode of the topStack <= 2 and not revIDEStackIsIDEStack(the topStack)) & return after tView
-   put enableMenuItem("Go Ne&xt/3", the mode of the topStack <= 2 and not revIDEStackIsIDEStack(the topStack)) & return after tView
-   put enableMenuItem("Go &Last/4", the mode of the topStack <= 2 and not revIDEStackIsIDEStack(the topStack)) & return after tView
-   put enableMenuItem("Go Recent/5", the mode of the topStack <= 2 and not revIDEStackIsIDEStack(the topStack)) & return after tView
+   put enableMenuItem("Go &First/1", the mode of the topStack is 1) & return after tView
+   put enableMenuItem("Go Pre&v/2", the mode of the topStack is 1) & return after tView
+   put enableMenuItem("Go Ne&xt/3", the mode of the topStack is 1) & return after tView
+   put enableMenuItem("Go &Last/4", the mode of the topStack is 1) & return after tView
+   put enableMenuItem("Go Recent/5", the mode of the topStack is 1) & return after tView
    put "-" & return after tView
    put toggleMenuItem("Toolbar Text", the cToolbarText of stack "revPreferences") & return after tView
    put toggleMenuItem("Toolbar Icons", the cToolbarIcons of stack "revPreferences") & return after tView
@@ -2024,7 +2027,7 @@ private function revMenubarViewMenu pContext
    put toggleMenuItem("Grid", the grid) & return after tView
    put toggleMenuItem("Backdrop", the backdrop is not "none") & return after tView
    --   put toggleMenuItem("Show IDE Stacks In Lists", gREVShowStacks) & return after tView
-   put toggleMenuItem("Show IDE Stacks In Lists", the cShowRevolutionStacks of stack "revPreferences") & return after tView
+   put toggleMenuItem("Show IDE Stacks In Lists", revIDEGetPreference("cShowRevolutionStacks")) & return after tView
    put "-" & return after tView
    put toggleMenuItem("Show &Invisible Objects" , the showInvisibles) & return after tView
    
@@ -2043,8 +2046,6 @@ private function hxtMenubarPluginsMenu pContext
    if sPluginMenuText is not empty then
       put sPluginMenuText & return after tPlugins
    end if
-   put "-" & return after tPlugins
-   put "Plugin Settings" & return after tPlugins
    
    return modifyMenu("Plugins", tPlugins)
 end hxtMenubarPluginsMenu
@@ -2075,8 +2076,8 @@ private function revMenubarDevelopmentMenu pContext
    --   if sPluginMenuText is not empty then
    --      put sPluginMenuText & return after tDevelopment
    --   end if
-   --   put tab & "-" & return after tDevelopment
-   --   put tab & "Plugin Settings" & return after tDevelopment
+   put tab & "-" & return after tDevelopment
+   put tab & "Plugin Settings" & return after tDevelopment
    put "-" & return after tDevelopment
    
    if revEnvironmentEditionProperty("script_profiler") then
@@ -2804,6 +2805,9 @@ on revMenubarFileMenuPick pWhich
       case "Save As..."
          revIDEActionSaveStackAs the long id of the topStack
          break
+      case "Save as Project..."
+         revIDEActionSaveAsProject the long id of the topStack
+         break
       case "Save As Standalone Application..."
          revIDESaveAsStandalone the long id of the topStack
          break
@@ -2852,7 +2856,13 @@ on revMenubarFileMenuPick pWhich
                   revIDESetPreference "cRecentStackPaths", empty
                   ideMessageSend "ideRecentFilesChanged"
                else
-                  revIDEOpenStack tRecentStack
+                  if tRecentStack ends with ".hyperxtalk_project" then
+                     -- The stored path is the inner JSON file (platform-neutral).
+                     -- Pass it straight to the project loader.
+                     revIDELoadFromProject tRecentStack
+                  else
+                     revIDEOpenStack tRecentStack
+                  end if
                end if
                break
             case "Import As Control"
@@ -3280,11 +3290,10 @@ end revMenubarHelpMenuPick
 
 // HXT
 on systemAppearanceChanged pMode, pWindowColor, pTextColor
-   --   set the backgroundColor of this stack to pWindowColor
-   --   set the foregroundColor of this stack to pTextColor
+   set the backgroundColor of this stack to pWindowColor
+   set the foregroundColor of this stack to pTextColor
    local tDividerCounter
    put 1 into tDividerCounter
-   lock screen
    repeat for each item tItem in revMenubarItems()
       local tModeIsLight, tModeIsDark
       if (pMode is "light") then
@@ -3303,5 +3312,4 @@ on systemAppearanceChanged pMode, pWindowColor, pTextColor
          set the visible of button (tItem & "-DM") of group "Toolbar" of me to tModeIsDark
       end if
    end repeat
-   unlock screen
 end systemAppearanceChanged
