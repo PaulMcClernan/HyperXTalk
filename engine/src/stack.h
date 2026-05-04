@@ -961,8 +961,11 @@ public:
 
     // HXT: Mark the stack as a pre-compiled library loaded from a .hxtlib file.
     // Compiled stacks are immutable: get/set the script of returns empty / is ignored.
+    // p_script is the source text from the SRCS section (may be kMCEmptyString).
+    // SetScript is called internally so handlers are callable, but the source
+    // text is not exposed through the scripting API.
     bool iscompiledlib(void) const { return m_is_compiled_lib; }
-    void setascompiledlib(void);
+    void setascompiledlib(MCStringRef p_script);
     
     // BWM-2017-08-16: [[ Bug 17810 ]] Get/set line endings for imported script-only-stack.
     MCStringLineEndingStyle getlineencodingstyle(void) const

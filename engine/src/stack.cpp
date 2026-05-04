@@ -2083,13 +2083,26 @@ void MCStack::setasscriptonly(MCStringRef p_script)
 
 // HXT: Set up this stack as a compiled library loaded from a .hxtlib file.
 // The stack is treated as a script-only stack (invisible, at least one card),
-// but marked immutable so the source script cannot be read or modified.
+// but marked immutable so the source script cannot be read or modified via
+// the scripting API.
 //
-// TODO: When the engine AST serialisation layer is defined, this should accept
-// an hxtlib::Document and reconstruct the handler list (hlist) from doc.nodes
-// instead of parsing source text.
-void MCStack::setascompiledlib(void)
+// p_script is the source text from the SRCS section of the .hxtlib file.
+// We call SetScript at the C++ level here — before m_is_compiled_lib is
+// set — so that the guard in exec-interface-object.cpp does not block it.
+// This populates hlist so that handler dispatch works normally.
+//
+// When the AST serialisation layer is defined, this should reconstruct
+// hlist directly from the ASTN nodes instead of re-parsing source text,
+// at which point SRCS can be omitted from the .hxtlib format.
+void MCStack::setascompiledlib(MCStringRef p_script)
 {
+    // Populate hlist from source text (if present) before locking the stack.
+    if (p_script != nil && !MCStringIsEmpty(p_script))
+    {
+        MCExecContext ctxt(nil, nil, nil);
+        /* UNCHECKED */ SetScript(ctxt, p_script);
+    }
+
     m_is_script_only   = true;
     m_is_compiled_lib  = true;
 

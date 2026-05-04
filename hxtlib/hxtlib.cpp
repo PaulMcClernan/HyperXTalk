@@ -513,20 +513,28 @@ const std::string &Document::get_string(uint32_t index) const
 
 Error write(const Document &doc, const std::string &path)
 {
-    // Build the four section data buffers.
+    // Build section data buffers.
     Buf meta_buf = build_meta(doc.meta);
     Buf strt_buf = build_strt(doc.string_table);
     Buf astn_buf = build_astn(doc.nodes);
-    // HASH is always 32 bytes (computed at end).
 
-    static constexpr uint16_t kSecCount = 4;
+    // SRCS section: raw UTF-8 source script (may be empty — loader handles both).
+    Buf srcs_buf(doc.source_script.begin(), doc.source_script.end());
+
+    // HASH is always 32 bytes (SHA-256, computed at end).
+
+    // Section count: META + STRT + ASTN + SRCS + HASH = 5.
+    // We always write SRCS (possibly empty) so the section count is constant
+    // and readers don't need version negotiation for this field.
+    static constexpr uint16_t kSecCount = 5;
     static constexpr size_t   kHdrSize  = 32;
     static constexpr size_t   kDirSize  = kSecCount * 16;
 
     const uint32_t meta_offset = (uint32_t)(kHdrSize + kDirSize);
     const uint32_t strt_offset = (uint32_t)(meta_offset + meta_buf.size());
     const uint32_t astn_offset = (uint32_t)(strt_offset + strt_buf.size());
-    const uint32_t hash_offset = (uint32_t)(astn_offset + astn_buf.size());
+    const uint32_t srcs_offset = (uint32_t)(astn_offset + astn_buf.size());
+    const uint32_t hash_offset = (uint32_t)(srcs_offset + srcs_buf.size());
 
     Buf b;
     b.reserve(hash_offset + 32 + 16);
@@ -545,22 +553,24 @@ Error write(const Document &doc, const std::string &path)
     put_u64(b, ts);                           // [20..27]
     put_u32(b, 0);                            // [28..31]  hdr_crc32 placeholder
 
-    // ---- Section directory (bytes 32-95) ----
-    // Offsets and section CRCs are known now; HASH crc32 patched later.
+    // ---- Section directory ----
     put_sec_entry(b, {kSectionMeta, meta_offset, (uint32_t)meta_buf.size(),
                       crc32_of(meta_buf.data(), meta_buf.size())});
     put_sec_entry(b, {kSectionStrt, strt_offset, (uint32_t)strt_buf.size(),
                       crc32_of(strt_buf.data(), strt_buf.size())});
     put_sec_entry(b, {kSectionAstn, astn_offset, (uint32_t)astn_buf.size(),
                       crc32_of(astn_buf.data(), astn_buf.size())});
-    // HASH entry — offset and length known, crc32 = 0 for now.
-    const size_t hash_dir_offset = b.size(); // remember where to patch
+    put_sec_entry(b, {kSectionSrcs, srcs_offset, (uint32_t)srcs_buf.size(),
+                      crc32_of(srcs_buf.data(), srcs_buf.size())});
+    // HASH entry — offset and length known, crc32 = 0 for now (patched below).
+    const size_t hash_dir_offset = b.size();
     put_sec_entry(b, {kSectionHash, hash_offset, 32u, 0u});
 
     // ---- Section data ----
     put_bytes(b, meta_buf.data(), meta_buf.size());
     put_bytes(b, strt_buf.data(), strt_buf.size());
     put_bytes(b, astn_buf.data(), astn_buf.size());
+    put_bytes(b, srcs_buf.data(), srcs_buf.size());
 
     // ---- Header CRC (bytes 28-31 cover bytes 0-27, no section data involved) ----
     patch_u32(b, 28, crc32_of(b.data(), 28));
@@ -600,6 +610,19 @@ static Error read_raw(const std::string       &path,
                       uint64_t                &compiled_at_out,
                       std::vector<SecEntry>   &secs_out)
 {
+    // Quick magic pre-check: peek at first 8 bytes only.
+    // This avoids reading multi-MB binary stack files for the common case where
+    // the file is not an .hxtlib file at all.
+    {
+        FILE *pf = fopen(path.c_str(), "rb");
+        if (!pf) return Error::IOError;
+        uint8_t probe[8] = {};
+        size_t  n = fread(probe, 1, 8, pf);
+        fclose(pf);
+        if (n < 8 || memcmp(probe, kMagicBytes, 8) != 0)
+            return Error::BadMagic;
+    }
+
     if (!file_read(path, file_buf))
         return Error::IOError;
 
@@ -763,6 +786,17 @@ Error read(const std::string  &path,
     if (!astn_se) return Error::InvalidStructure;
     err = parse_astn(d + astn_se->offset, astn_se->length, doc_out.nodes);
     if (err != Error::Ok) return err;
+
+    // SRCS (optional — absent in files compiled without source, e.g. for
+    // distribution; present in the default hxtc output so the engine can
+    // call SetScript() to populate the handler list).
+    const SecEntry *srcs_se = find_sec(kSectionSrcs);
+    if (srcs_se && srcs_se->length > 0)
+    {
+        doc_out.source_script.assign(
+            reinterpret_cast<const char *>(d + srcs_se->offset),
+            srcs_se->length);
+    }
 
     return Error::Ok;
 }

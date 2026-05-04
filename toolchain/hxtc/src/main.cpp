@@ -332,18 +332,30 @@ int main(int argc, char *argv[])
     if (!doc.meta.name.empty())        doc.intern(doc.meta.name);
     if (!doc.meta.identifier.empty())  doc.intern(doc.meta.identifier);
 
+    // --- source script (SRCS section) ---
+    //
+    // Store the full source text so the engine loader can call SetScript()
+    // to populate the handler list.  This is the interim approach until the
+    // AST serialisation layer is defined, at which point SRCS can be omitted
+    // and ASTN nodes will carry the pre-parsed representation instead.
+    doc.source_script = source;
+
+    if (verbose)
+        std::fprintf(stderr,
+            "hxtc: stored %zu bytes of source script in SRCS section\n",
+            source.size());
+
     // --- AST nodes ---
     //
     // TODO: When the engine AST serialisation layer is defined, invoke the
     // engine's parser on `source`, walk the resulting handler list, and
     // serialise each MCHandler into an hxtlib::ASTNode.  Until then the
-    // nodes array is left empty — the .hxtlib file is structurally valid
-    // and will load in the engine as an immutable (no-handler) library.
+    // nodes array is left empty.
 
     if (verbose && doc.nodes.empty())
         std::fprintf(stderr,
-            "hxtc: warning: ASTN is empty — AST serialisation not yet "
-            "implemented; compiled library will have no callable handlers\n");
+            "hxtc: note: ASTN is empty — AST serialisation not yet "
+            "implemented\n");
 
     // --- write ---
 

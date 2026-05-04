@@ -987,7 +987,14 @@ IO_stat MCDispatch::trytoreadhxtlibstack(MCStringRef p_openpath,
         MC_BUILD_ENGINE_MINOR_VERSION,
         MC_BUILD_ENGINE_POINT_VERSION);
 
-    if (t_verr == hxtlib::Error::BadMagic)
+    // BadMagic  → definitely not an .hxtlib file; fall through to other formats.
+    // IOError   → hxtlib can't open the file (permissions, missing, etc.); the
+    //             engine already has the stream open via its own path, so let it
+    //             continue with the binary/script-only loaders.
+    // Truncated → file is shorter than a valid .hxtlib header; not our format.
+    if (t_verr == hxtlib::Error::BadMagic  ||
+        t_verr == hxtlib::Error::IOError   ||
+        t_verr == hxtlib::Error::Truncated)
     {
         MCMemoryDeleteArray(t_path_cstr);
         return IO_NORMAL; // not a .hxtlib file; let the caller try other formats
@@ -1047,8 +1054,31 @@ IO_stat MCDispatch::trytoreadhxtlibstack(MCStringRef p_openpath,
 
     t_stack->setfilename(p_openpath);
 
-    // Mark the stack as a compiled library (sets m_is_script_only too).
-    t_stack->setascompiledlib();
+    // Populate hlist from the SRCS source text and mark the stack immutable.
+    // setascompiledlib() calls SetScript() internally (before setting the
+    // compiled-lib flag) so handlers are dispatachable, but the source text
+    // is invisible to scripts via get/set the script of.
+    if (!t_doc.source_script.empty())
+    {
+        MCAutoStringRef t_srcs;
+        if (MCStringCreateWithBytes(
+                reinterpret_cast<const byte_t *>(t_doc.source_script.data()),
+                t_doc.source_script.size(),
+                kMCStringEncodingUTF8,
+                false,
+                &t_srcs))
+        {
+            t_stack->setascompiledlib(*t_srcs);
+        }
+        else
+        {
+            t_stack->setascompiledlib(kMCEmptyString);
+        }
+    }
+    else
+    {
+        t_stack->setascompiledlib(kMCEmptyString);
+    }
 
     // TODO: When the engine AST serialisation layer is defined, reconstruct
     // the handler list (hlist) from t_doc.nodes here instead of leaving it

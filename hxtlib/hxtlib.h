@@ -34,6 +34,7 @@ static constexpr uint16_t kFlagMangled    = 1u << 2;  // identifier names in STR
 static constexpr uint32_t kSectionMeta = 0x4154454Du; // 'META'
 static constexpr uint32_t kSectionStrt = 0x54525453u; // 'STRT'
 static constexpr uint32_t kSectionAstn = 0x4E545341u; // 'ASTN'
+static constexpr uint32_t kSectionSrcs = 0x53435253u; // 'SRCS' — UTF-8 source script (interim until AST layer)
 static constexpr uint32_t kSectionHash = 0x48534148u; // 'HASH'
 
 // ------------------------------------------------------------------ errors
@@ -103,6 +104,12 @@ struct Document {
     Meta                     meta;
     std::vector<std::string> string_table;  // STRT: all string literals / identifiers
     std::vector<ASTNode>     nodes;         // ASTN: flat pre-order AST
+
+    // SRCS: raw UTF-8 source script stored verbatim.
+    // Interim field — used by the engine loader to call SetScript() and
+    // populate the handler list until full AST serialisation is implemented.
+    // Leave empty when shipping a library without source (obfuscated mode).
+    std::string source_script;
 
     // Intern a string into the string table and return its index.
     // If the string is already present the existing index is returned.
