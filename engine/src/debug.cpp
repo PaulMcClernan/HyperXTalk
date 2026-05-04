@@ -45,7 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCExecContext *MCECptr;
+thread_local MCExecContext *MCECptr;
 MCStackHandle MCtracestackptr;
 Window MCtracewindow;
 Boolean MCtrace;
@@ -64,7 +64,7 @@ Watchvar *MCwatchedvars = nil;
 uint2 MCnwatchedvars = 0;
 
 MCExecContext *MCexecutioncontexts[MAX_CONTEXTS];
-uint2 MCnexecutioncontexts = 0;
+thread_local uint2 MCnexecutioncontexts = 0;
 uint2 MCdebugcontext = MAXUINT2;
 Boolean MCmessagemessages = False;
 MCNameRef MClogmessage;

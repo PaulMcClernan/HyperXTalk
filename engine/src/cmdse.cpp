@@ -16,6 +16,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
+#include <cstdio>   // fprintf, stderr
+
 #include "globdefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
@@ -492,7 +494,10 @@ Parse_stat MCDispatchCmd::parse(MCScriptPoint& sp)
     {
         container_count = params->count_containers();
     }
-    
+
+    fprintf(stderr, "[MCDispatch] parsed: to_worker=%d to_caller=%d target=%p worker=%p\n",
+            (int)to_worker, (int)to_caller, (void*)target, (void*)worker_name);
+
 	return PS_NORMAL;
 }
 
@@ -502,6 +507,10 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
     MCNewAutoNameRef t_message;
     if (!ctxt . EvalExprAsNameRef(message, EE_DISPATCH_BADMESSAGEEXP, &t_message))
         return;
+
+    fprintf(stderr, "[MCDispatch] exec msg='%s' to_worker=%d to_caller=%d target=%p worker=%p\n",
+            MCStringGetCString(MCNameGetString(*t_message)),
+            (int)to_worker, (int)to_caller, (void*)target, (void*)worker_name);
 
     // Worker dispatch path: 'dispatch <msg> to worker <name> [with <params>]'
     if (to_worker)

@@ -534,8 +534,19 @@ void MCWorkerExecCreate(MCExecContext &ctxt,
     if (p_script_file != nullptr && !MCStringIsEmpty(p_script_file))
     {
         MCAutoStringRef t_script;
-        if (MCS_loadtextfile(p_script_file, &t_script))
+        bool t_loaded = MCS_loadtextfile(p_script_file, &t_script);
+        fprintf(stderr, "[MCWorkerCreate] script_file='%s' loaded=%d len=%u\n",
+                MCStringGetCString(p_script_file),
+                (int)t_loaded,
+                t_loaded ? (unsigned)MCStringGetLength(*t_script) : 0u);
+        if (t_loaded)
             t_stack->setstringprop(ctxt, 0, P_SCRIPT, False, *t_script);
+    }
+    else
+    {
+        fprintf(stderr, "[MCWorkerCreate] no script file (p_script_file=%p empty=%d)\n",
+                (void*)p_script_file,
+                p_script_file ? (int)MCStringIsEmpty(p_script_file) : -1);
     }
 
     MCWorker *t_worker = new (nothrow) MCWorker(p_name);
