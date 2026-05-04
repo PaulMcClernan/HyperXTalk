@@ -1111,6 +1111,7 @@ const LT factor_table[] =
 		{"innerglow", TT_PROPERTY, P_BITMAP_EFFECT_INNER_GLOW},
 		{"innershadow", TT_PROPERTY, P_BITMAP_EFFECT_INNER_SHADOW},
         {"internet", TT_PROPERTY, P_INTERNET},
+        {"iff", TT_FUNCTION, F_IFF},
         {"interrupt", TT_FUNCTION, F_INTERRUPT},
         {"intersect", TT_FUNCTION, F_INTERSECT},
         {"into", TT_PREP, PT_INTO},

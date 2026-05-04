@@ -411,6 +411,7 @@ enum Functions {
     F_HN,
     F_HNTOA,
     F_INTERRUPT,
+    F_IFF,
     F_INTERSECT,
     F_IS_NUMBER,
     F_ISO_TO_MAC,

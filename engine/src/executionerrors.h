@@ -2793,7 +2793,13 @@ enum Exec_errors
     EE_MATCHES_BADLEFT,
 
     // {EE-0916} Operators matches: error in right operand
-    EE_MATCHES_BADRIGHT
+    EE_MATCHES_BADRIGHT,
+
+    // {EE-0917} iff: error evaluating condition
+    EE_IFF_BADCONDITION,
+
+    // {EE-0918} iff: error evaluating result expression
+    EE_IFF_BADRESULT
 
 };
 

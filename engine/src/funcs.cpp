@@ -750,6 +750,43 @@ void MCInsertScripts::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+// MCIff - iff(condition, trueResult, falseResult)
+// Lazy conditional: evaluates and returns trueResult if condition is true,
+// falseResult otherwise. Only the taken branch is evaluated.
+
+MCIff::~MCIff()
+{
+    delete condition;
+    delete true_expr;
+    delete false_expr;
+}
+
+Parse_stat MCIff::parse(MCScriptPoint &sp, Boolean the)
+{
+    if (get3params(sp, &condition, &true_expr, &false_expr) != PS_NORMAL)
+    {
+        MCperror->add(PE_IFF_BADPARAM, sp);
+        return PS_ERROR;
+    }
+    return PS_NORMAL;
+}
+
+void MCIff::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+{
+    bool t_cond;
+    if (!ctxt.EvalExprAsBool(condition, EE_IFF_BADCONDITION, t_cond))
+        return;
+
+    MCValueRef t_result;
+    if (!ctxt.EvalExprAsValueRef(t_cond ? true_expr : false_expr, EE_IFF_BADRESULT, t_result))
+        return;
+
+    MCExecTypeSetValueRef(r_value, t_result);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCIntersect::~MCIntersect()
 {
 	delete o1;
