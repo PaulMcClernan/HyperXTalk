@@ -1597,10 +1597,14 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 	{
 		if (window == NULL && !MCNameIsEqualToCaseless(message, MCM_start_up)
 #ifdef _MACOSX
-		        && !(state & CS_DELETE_STACK))
+		        && !(state & CS_DELETE_STACK)
 #else
-				&& !MCStringIsEmpty(externalfiles) && !(state & CS_DELETE_STACK))
+				&& !MCStringIsEmpty(externalfiles) && !(state & CS_DELETE_STACK)
 #endif
+                // Worker backing stacks are script-only and must never create
+                // a platform window — createwindow() is not thread-safe and
+                // would be called from the worker's background thread.
+                && !m_is_script_only)
 		{
 			// IM-2014-01-16: [[ StackScale ]] Ensure view has the current stack rect
 			view_setstackviewport(rect);

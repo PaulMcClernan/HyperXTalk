@@ -1810,6 +1810,12 @@ enum Parse_errors
     
     // {PE-0584} out of memory
     PE_OUTOFMEMORY,
+
+    // {PE-0585} matches: missing match mode 'regex' or 'wildcard'
+    PE_MATCHES_NOMODE,
+
+    // {PE-0586} iff: requires exactly 3 parameters
+    PE_IFF_BADPARAM,
 };
 
 extern const char *MCparsingerrors;

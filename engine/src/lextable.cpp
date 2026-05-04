@@ -1095,6 +1095,7 @@ const LT factor_table[] =
         {"id", TT_PROPERTY, P_ID},
         {"idlerate", TT_PROPERTY, P_IDLE_RATE},
         {"idleticks", TT_PROPERTY, P_IDLE_TICKS},
+        {"iff", TT_FUNCTION, F_IFF},
         // MERG-2014-06-02: [[ IgnoreMouseEvents ]] ignoreMouseEvents stack property
         {"ignoremouseevents", TT_PROPERTY, P_IGNORE_MOUSE_EVENTS},
         {"image", TT_CHUNK, CT_IMAGE},
@@ -1229,6 +1230,7 @@ const LT factor_table[] =
         {"maskdata", TT_PROPERTY, P_MASK_DATA},
         {"maskpixmapid", TT_PROPERTY, P_MASK_PIXMAP_ID},
         {"matchchunk", TT_FUNCTION, F_MATCH_CHUNK},
+        {"matches", TT_BINOP, O_MATCHES},
         {"matchtext", TT_FUNCTION, F_MATCH_TEXT},
         {"matrixmultiply", TT_FUNCTION, F_MATRIX_MULTIPLY},
         {"max", TT_FUNCTION, F_MAX},

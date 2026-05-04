@@ -16,6 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
+
 #include "globdefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
@@ -492,7 +493,7 @@ Parse_stat MCDispatchCmd::parse(MCScriptPoint& sp)
     {
         container_count = params->count_containers();
     }
-    
+
 	return PS_NORMAL;
 }
 

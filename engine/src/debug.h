@@ -76,7 +76,7 @@ struct Watchvar
 
 #define MAX_CONTEXTS 100
 
-extern MCExecContext *MCECptr;
+extern thread_local MCExecContext *MCECptr;
 extern MCStackHandle MCtracestackptr;
 extern Window MCtracewindow;
 extern Boolean MCtrace;
@@ -94,7 +94,7 @@ extern uint2 MCnwatchedvars;
 extern Watchvar *MCwatchedvars;
 
 extern MCExecContext *MCexecutioncontexts[MAX_CONTEXTS];
-extern uint2 MCnexecutioncontexts;
+extern thread_local uint2 MCnexecutioncontexts;
 extern uint2 MCdebugcontext;
 extern Boolean MCmessagemessages;
 extern MCNameRef MClogmessage;

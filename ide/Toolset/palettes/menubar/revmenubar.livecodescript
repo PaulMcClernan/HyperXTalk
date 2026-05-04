@@ -268,7 +268,6 @@ on setMenuProperties
          if revIDEGetPreference("cREVMenuBarTopLeft") is empty
          then set the loc of me to item 1 of revIDEStackScreenLoc(the short name of this stack), 54
          else 
-            put revIDEGetPreference("cREVMenuBarTopLeft")
             set the topLeft of me to revIDEGetPreference("cREVMenuBarTopLeft")
          end if
       end if
@@ -2046,6 +2045,8 @@ private function hxtMenubarPluginsMenu pContext
    if sPluginMenuText is not empty then
       put sPluginMenuText & return after tPlugins
    end if
+   put "-" & return after tPlugins
+   put "Plugin Settings" & return after tPlugins
    
    return modifyMenu("Plugins", tPlugins)
 end hxtMenubarPluginsMenu
@@ -2076,8 +2077,8 @@ private function revMenubarDevelopmentMenu pContext
    --   if sPluginMenuText is not empty then
    --      put sPluginMenuText & return after tDevelopment
    --   end if
-   put tab & "-" & return after tDevelopment
-   put tab & "Plugin Settings" & return after tDevelopment
+   --   put tab & "-" & return after tDevelopment
+   --   put tab & "Plugin Settings" & return after tDevelopment
    put "-" & return after tDevelopment
    
    if revEnvironmentEditionProperty("script_profiler") then

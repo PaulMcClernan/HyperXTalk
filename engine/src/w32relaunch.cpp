@@ -429,7 +429,7 @@ bool relaunch_startup(MCStringRef p_stack_name)
 	if (t_relaunch_folder == NULL)
 		t_relaunch_folder = get_special_folder(CSIDL_APPDATA, true);
 	if (t_relaunch_folder != NULL)
-		t_relaunch_folder = concatenate(t_relaunch_folder, true, (char *)"\\._LiveCode_.", false);
+		t_relaunch_folder = concatenate(t_relaunch_folder, true, (char *)"\\HyperXTalk", false);
 	if (t_relaunch_folder != NULL)
 		ensure_folder(t_relaunch_folder);
 

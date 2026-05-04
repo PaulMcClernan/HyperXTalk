@@ -411,6 +411,7 @@ enum Functions {
     F_HN,
     F_HNTOA,
     F_INTERRUPT,
+    F_IFF,
     F_INTERSECT,
     F_IS_NUMBER,
     F_ISO_TO_MAC,
@@ -788,7 +789,8 @@ enum Operators {
     O_OR,
 	O_WRAP,
 	O_BEGINS_WITH,
-	O_ENDS_WITH
+	O_ENDS_WITH,
+	O_MATCHES
 };
 
 // return codes from parsers

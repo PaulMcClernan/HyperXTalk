@@ -817,4 +817,101 @@ if not exist "%LC_COMPILE%" (
 :: can resolve the 'use com.livecode.library.widgetutils' import.
 :: The .lcm bytecode is configuration-independent, so we bootstrap
 :: both from the Debug output / source tree.
+:: ---------------------------------------------------:: The .lcm bytecode is configuration-independent, so we bootstrap
+:: both from the Debug output / source tree.
 :: ---------------------------------------------------
+
+if not exist "%BROWSER_PKG%" mkdir "%BROWSER_PKG%"
+
+:: Copy manifest from source tree if not already present
+if not exist "%BROWSER_PKG%\manifest.xml" (
+    if exist "..\extensions\widgets\browser\manifest.xml" (
+        copy /Y "..\extensions\widgets\browser\manifest.xml" "%BROWSER_PKG%\manifest.xml" > nul
+    )
+)
+
+:: Ensure widgetutils .lci is in the modulepath
+if not exist "%LCI_DIR%\com.livecode.library.widgetutils.lci" (
+    if exist "%DBG_DIR%\modules\lci\com.livecode.library.widgetutils.lci" (
+        copy /Y "%DBG_DIR%\modules\lci\com.livecode.library.widgetutils.lci" "%LCI_DIR%\" > nul
+    )
+)
+
+:: Compile browser.lcb if source is present
+if exist "%BROWSER_LCB%" (
+    "%LC_COMPILE%" --modulepath "%LCI_DIR%" --manifest "%BROWSER_PKG%\manifest.xml" --output "%BROWSER_PKG%\module.lcm" "%BROWSER_LCB%" > nul 2>&1
+    if exist "%BROWSER_PKG%\module.lcm" (
+        echo Browser widget compiled OK.
+    ) else (
+        echo WARNING: browser widget compilation failed -- skipping.
+    )
+) else (
+    echo WARNING: browser.lcb not found -- skipping browser widget compilation.
+)
+
+:: ==============================================================
+:: Copy VLC runtime DLLs and plugins into the Release output dir
+:: so the engine can find them at run-time (and so the installer
+:: can package them).
+::
+:: Layout placed into Release\:
+::   libvlc.dll
+::   libvlccore.dll
+::   vlc-plugins\plugins\<codec dirs…>   ← EnsureVLCInstance() probes this first
+::
+:: EnsureVLCInstance() probe order (see engine/src/vlc-player.cpp):
+::   1. <exedir>\vlc-plugins\plugins   → --plugin-path=<that path>
+::   2. <exedir>\vlc-plugins            → --plugin-path=<that path>
+::   3. C:\Program Files\VideoLAN\VLC\plugins (fallback, system VLC)
+::
+:: If VLC is not installed the copy is skipped with a WARNING so
+:: the rest of the build succeeds without VLC support.
+:: ==============================================================
+
+echo.
+echo Copying VLC runtime files ...
+echo Copying VLC runtime files ... >> "%LOGFILE%"
+
+set "VLC_SRC=C:\Program Files\VideoLAN\VLC"
+
+if not exist "%VLC_SRC%\libvlc.dll" (
+    echo WARNING: VLC not found at "%VLC_SRC%" -- skipping VLC runtime copy.
+    echo          Install VLC 3.x to enable video playback in HyperXTalk.
+    echo WARNING: VLC not found -- video playback will not work. >> "%LOGFILE%"
+    goto vlc_done
+)
+
+:: Core DLLs
+copy /Y "%VLC_SRC%\libvlc.dll"     "%OUTDIR%\libvlc.dll"     > nul
+copy /Y "%VLC_SRC%\libvlccore.dll" "%OUTDIR%\libvlccore.dll" > nul
+echo   libvlc.dll, libvlccore.dll copied.
+
+:: MinGW runtime DLLs that libvlccore.dll depends on.
+:: VLC 3.x on Windows is compiled with GCC (MinGW-w64), so these are
+:: bundled in VLC's install dir but not in the Windows system dirs.
+:: Without them libvlccore.dll fails to load and libvlc_new() returns null.
+for %%D in (libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll) do (
+    if exist "%VLC_SRC%\%%D" (
+        copy /Y "%VLC_SRC%\%%D" "%OUTDIR%\%%D" > nul
+        echo   %%D copied.
+    ) else (
+        echo   NOTE: %%D not found in VLC dir -- may already be on system PATH.
+    )
+)
+
+:: plugins tree → Release\vlc-plugins\plugins\
+set "VLC_PLUGINS_DST=%OUTDIR%\vlc-plugins\plugins"
+if not exist "%VLC_PLUGINS_DST%" mkdir "%VLC_PLUGINS_DST%"
+
+xcopy /E /I /Y /Q "%VLC_SRC%\plugins" "%VLC_PLUGINS_DST%" > nul
+if %ERRORLEVEL% NEQ 0 (
+    echo WARNING: xcopy of VLC plugins returned error %ERRORLEVEL% -- some plugins may be missing.
+    echo WARNING: xcopy VLC plugins error %ERRORLEVEL% >> "%LOGFILE%"
+) else (
+    echo   VLC plugins copied to vlc-plugins\plugins\.
+)
+
+:vlc_done
+echo.
+echo Build complete.
+echo Build complete. >> "%LOGFILE%"

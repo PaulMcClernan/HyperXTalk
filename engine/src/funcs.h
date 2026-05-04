@@ -865,6 +865,20 @@ class MCInterrupt : public MCConstantFunctionCtxt<bool, MCEngineEvalInterrupt>
 public:
 };
 
+// iff(condition, trueResult, falseResult) — lazy conditional function.
+// Only the branch that is actually taken is evaluated.
+class MCIff : public MCFunction
+{
+    MCExpression *condition;
+    MCExpression *true_expr;
+    MCExpression *false_expr;
+public:
+    MCIff() : condition(NULL), true_expr(NULL), false_expr(NULL) {}
+    virtual ~MCIff();
+    virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+    virtual void eval_ctxt(MCExecContext &, MCExecValue &);
+};
+
 class MCIntersect : public MCFunction
 {
 	MCChunk *o1;

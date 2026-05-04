@@ -2787,7 +2787,19 @@ enum Exec_errors
     // {EE-0913} showNotification: bad tag expression
     EE_SHOWNOTIFICATION_BADTAG,
     // {EE-0914} cancelNotification: bad tag expression
-    EE_CANCELNOTIFICATION_BADTAG
+    EE_CANCELNOTIFICATION_BADTAG,
+
+    // {EE-0915} Operators matches: error in left operand
+    EE_MATCHES_BADLEFT,
+
+    // {EE-0916} Operators matches: error in right operand
+    EE_MATCHES_BADRIGHT,
+
+    // {EE-0917} iff: error evaluating condition
+    EE_IFF_BADCONDITION,
+
+    // {EE-0918} iff: error evaluating result expression
+    EE_IFF_BADRESULT
 
 };
 

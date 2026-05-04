@@ -623,6 +623,10 @@ private command revStandaloneCopyInclusions pStack, pStackFileList, pStackSource
          end if
       end repeat
    end if
+
+   -- VLC runtime bundling is handled in revSaveAsMacStandalone after engine deploy,
+   -- because revStandaloneDeployWithParams recreates the .app bundle and would
+   -- wipe any Resources/ content written here.
 end revStandaloneCopyInclusions
 
 local sLastUsedSettingsA
@@ -722,6 +726,11 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePa
       put tStackPath & "/" before sStandaloneSettingsA["OSX,plist"]
    end if
    
+   -- Determine VLC requirement before the loop: revStandaloneDeployWithParams moves/saves
+   -- the stack, making it unreachable by name inside the loop body.
+   local tNeedsVLC
+   put revSAStandaloneNeedsVLC(pStack) into tNeedsVLC
+
    -- keep a copy of the standalone settings to restore after each build
    local tStandaloneSettingsA
    put sStandaloneSettingsA into tStandaloneSettingsA
@@ -792,7 +801,75 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePa
       revSetMacOS tStandalonePath, tTarget, tEngineSourceFile
       
       revRedirectMacOSResources tStandalonePath
-      
+
+      -- Bundle VLC runtime and patch binary @rpath references after engine deploy.
+      -- Done here (not in revStandaloneCopyInclusions) because revStandaloneDeployWithParams
+      -- recreates the .app bundle, wiping any Resources/ content written before it.
+      -- performAdHocCodesign (--deep -f) below will re-sign everything afterward.
+      --
+      -- The engine binary always hard-links libvlc.dylib (LC_LOAD_DYLIB), so the two
+      -- dylibs must always be present in the bundle to prevent a launch-time crash,
+      -- even in projects that contain no player object.  Only the 340 codec plugins
+      -- (~150 MB) are omitted when there is no player.
+      if tTarget begins with "MacOSX" then
+         local tVLCLibSrcPost
+         put "/Applications/VLC.app/Contents/MacOS/lib" into tVLCLibSrcPost
+         if there is a folder tVLCLibSrcPost then
+            local tVLCContentsPath, tVLCLibDestPost, tVLCPluginsDestPost, tVLCR
+            set the itemDelimiter to slash
+            put item 1 to -3 of tStandalonePath into tVLCContentsPath
+            set the itemDelimiter to ","
+            put tVLCContentsPath & "/Resources/vlc-plugins/lib" into tVLCLibDestPost
+            put tVLCContentsPath & "/Resources/vlc-plugins/plugins" into tVLCPluginsDestPost
+            -- Always create lib dir and copy the two dylibs (required to satisfy the binary dependency)
+            put shell("mkdir -p " & QUOTE & tVLCLibDestPost & QUOTE) into tVLCR
+            put shell("cp -f " & QUOTE & tVLCLibSrcPost & "/libvlc.dylib" & QUOTE & " " & QUOTE & tVLCLibDestPost & "/libvlc.dylib" & QUOTE) into tVLCR
+            put shell("cp -f " & QUOTE & tVLCLibSrcPost & "/libvlccore.dylib" & QUOTE & " " & QUOTE & tVLCLibDestPost & "/libvlccore.dylib" & QUOTE) into tVLCR
+            -- Only copy the codec plugins when a player object is present in the project
+            if tNeedsVLC then
+               put shell("mkdir -p " & QUOTE & tVLCPluginsDestPost & QUOTE) into tVLCR
+               put shell("cp -rn " & QUOTE & "/Applications/VLC.app/Contents/MacOS/plugins/." & QUOTE & " " & QUOTE & tVLCPluginsDestPost & QUOTE) into tVLCR
+            end if
+            -- Patch libvlccore: use @rpath/libvlccore.dylib as install name so it matches
+            -- the reference form already used by both libvlc and all 340 plugin dylibs,
+            -- avoiding any dyld cache key mismatch between @loader_path and @rpath forms.
+            local tVLCLib
+            put tVLCLibDestPost & "/libvlccore.dylib" into tVLCLib
+            put shell("codesign --remove-signature " & QUOTE & tVLCLib & QUOTE) into tVLCR
+            put shell("install_name_tool -id @rpath/libvlccore.dylib " & QUOTE & tVLCLib & QUOTE) into tVLCR
+            put shell("codesign --sign - " & QUOTE & tVLCLib & QUOTE) into tVLCR
+            -- Patch libvlc: dynamically read the actual libvlccore reference (handles
+            -- versioned sonames like @rpath/libvlccore.9.dylib or absolute paths) then
+            -- normalise to @rpath/libvlccore.dylib.
+            put tVLCLibDestPost & "/libvlc.dylib" into tVLCLib
+            put shell("codesign --remove-signature " & QUOTE & tVLCLib & QUOTE) into tVLCR
+            local tLibvlcCoreRefs, tLibvlcCoreRef
+            put shell("otool -L " & QUOTE & tVLCLib & QUOTE & " | grep libvlccore | awk '{print $1}'") into tLibvlcCoreRefs
+            repeat for each line tLibvlcCoreRef in tLibvlcCoreRefs
+               put word 1 of tLibvlcCoreRef into tLibvlcCoreRef
+               if tLibvlcCoreRef is not empty and tLibvlcCoreRef is not "@rpath/libvlccore.dylib" then
+                  put shell("install_name_tool -change " & QUOTE & tLibvlcCoreRef & QUOTE & " @rpath/libvlccore.dylib " & QUOTE & tVLCLib & QUOTE) into tVLCR
+               end if
+            end repeat
+            put shell("install_name_tool -id @rpath/libvlc.dylib " & QUOTE & tVLCLib & QUOTE) into tVLCR
+            -- Add @loader_path as LC_RPATH so that when libvlc (in vlc-plugins/lib/) dlopen's
+            -- a plugin, dyld inherits this rpath and resolves @rpath/libvlccore.dylib →
+            -- vlc-plugins/lib/libvlccore.dylib.  Covers all 340 plugins in one shot.
+            put shell("install_name_tool -add_rpath @loader_path " & QUOTE & tVLCLib & QUOTE) into tVLCR
+            put shell("codesign --sign - " & QUOTE & tVLCLib & QUOTE) into tVLCR
+            -- Patch binary: rewrite @rpath/libvlc and @rpath/libvlccore to @executable_path/../Resources/vlc-plugins/lib/
+            local tVLCLibRef
+            put "@executable_path/../Resources/vlc-plugins/lib" into tVLCLibRef
+            put shell("install_name_tool -change @rpath/libvlc.dylib " & tVLCLibRef & "/libvlc.dylib " & QUOTE & tStandalonePath & QUOTE) into tVLCR
+            put shell("install_name_tool -change @rpath/libvlccore.dylib " & tVLCLibRef & "/libvlccore.dylib " & QUOTE & tStandalonePath & QUOTE) into tVLCR
+            if tNeedsVLC then
+               revStandaloneProgress "VLC player runtime bundled."
+            else
+               revStandaloneProgress "VLC runtime stubs bundled (no player in project)."
+            end if
+         end if
+      end if
+
       --Restore stack to its post-savingStandalone message state
       __RestoreStackFromTemporaryLocation pStack, pRestoreFileName, tOriginalFileName
    end repeat
@@ -810,6 +887,33 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePa
    
    return empty
 end revSaveAsMacStandalone
+
+-- Returns true if pStack (or any of its substacks) contains at least one player control.
+-- Used to gate VLC runtime bundling so the runtime is not copied for projects that
+-- never use a player object.
+private function revSAStandaloneNeedsVLC pStack
+   local tCardNum, tCard, tControlNum, tControl
+   put the number of cards of stack pStack into tCardNum
+   repeat with tCard = 1 to tCardNum
+      put the number of controls of card tCard of stack pStack into tControlNum
+      repeat with tControl = 1 to tControlNum
+         if word 1 of (the long id of control tControl of card tCard of stack pStack) is "player" then
+            return true
+         end if
+      end repeat
+   end repeat
+   -- Also check any in-memory substacks that belong to the same file
+   local tSubstacks, tSubstack
+   put the substacks of stack pStack into tSubstacks
+   repeat for each line tSubstack in tSubstacks
+      if tSubstack is not empty and there is a stack tSubstack then
+         if revSAStandaloneNeedsVLC(tSubstack) then
+            return true
+         end if
+      end if
+   end repeat
+   return false
+end revSAStandaloneNeedsVLC
 
 private command performAdHocCodesign pAppBundle
    local tShell
@@ -881,6 +985,11 @@ command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder, @xStandalo
       put item 1 to -2 of tName & "/Sample Icons/genericdoc.ico" into sStandaloneSettingsA["Windows,documenticonFile"]
    end if
    
+   -- Determine VLC requirement before the loop: revStandaloneDeployWithParams moves/saves
+   -- the stack, making it unreachable by name inside the loop body.
+   local tNeedsVLC
+   put revSAStandaloneNeedsVLC(pStack) into tNeedsVLC
+
    -- keep a copy of the standalone settings to restore after each build
    local tStandaloneSettingsA
    put sStandaloneSettingsA into tStandaloneSettingsA
@@ -1028,13 +1137,20 @@ command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder, @xStandalo
       end if
       
       revStandaloneDeployWithParams tTarget, tStackSourceFile, tDeployInfo
-      
+
+      -- Always copy the two VLC DLLs alongside the .exe — the engine links against
+      -- them at load time and will crash on launch if they are absent, even when no
+      -- player control is used.  Plugins are only copied when the project contains
+      -- a player control.
+      -- tDirectory ends with a path separator; strip it before passing to the helper.
+      revSBCopyVLCToStandalone "Windows", char 1 to -2 of tDirectory, tStandalonePath, tNeedsVLC
+
       --Restore stack to its post-savingStandalone message state
       __RestoreStackFromTemporaryLocation pStack, pRestoreFileName, tOriginalFileName
    end repeat
-   
+
    revStandalonePostBuild pStack, pFolder
-   
+
    return empty
 end revSaveAsWindowsStandalone
 
@@ -1047,6 +1163,11 @@ command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder, @xStandalone
    put item 1 to -2 of tOriginalFileName into tStackPath
    set the itemDelimiter to comma
    
+   -- Determine VLC requirement before the loop: revStandaloneDeployWithParams moves/saves
+   -- the stack, making it unreachable by name inside the loop body.
+   local tNeedsVLC
+   put revSAStandaloneNeedsVLC(pStack) into tNeedsVLC
+
    -- keep a copy of the standalone settings to restore after each build
    local tStandaloneSettingsA
    put sStandaloneSettingsA into tStandaloneSettingsA
@@ -1103,13 +1224,19 @@ command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder, @xStandalone
             tStandalonePath, tEngineSourceFile) into tDeployInfo
       
       revStandaloneDeployWithParams tTarget, tStackSourceFile, tDeployInfo
-      
+
+      -- Bundle VLC runtime alongside the binary if the project uses player controls.
+      -- tDirectory ends with a path separator; strip it before passing to the helper.
+      if tNeedsVLC then
+         revSBCopyVLCToStandalone "Linux", char 1 to -2 of tDirectory, tStandalonePath, tNeedsVLC
+      end if
+
       --Restore stack to its post-savingStandalone message state
       __RestoreStackFromTemporaryLocation pStack, pRestoreFileName, tOriginalFileName
    end repeat
-   
+
    revStandalonePostBuild pStack, pFolder
-   
+
    return empty
 end revSaveAsLinuxStandalone
 
@@ -1282,11 +1409,16 @@ private command revOutputDirectories pFolder
    if tOSXCount > 0 then add 1 to tPlatforms
    repeat for each item tTarget in tTargets
       if sStandaloneSettingsA[tTarget] = true then
+         -- Never attempt a Mac build on non-Mac hosts: the Mac engine binaries
+         -- are not present and the build tools (install_name_tool etc.) don't exist.
+         if tTarget contains "MacOSX" and the platform is not "MacOS" then
+            next repeat
+         end if
          if not revDownloadEngine(tTarget) then
             revStandaloneAddWarning "Could not build for " & tTarget & " because required files are missing."
             next repeat
          end if
-         
+
          local tPlatform
          put revSBTargetToPlatform(tTarget) into tPlatform
          
@@ -2578,7 +2710,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
       // AL-2015-05-07: [[ Bug 15320 ]] Make sure universal external name is used.
       local tExternal
       put revSBExternalNameFromFile(tPlatform, tSourceExternal) into tExternal
-      
+
       revCopyModule tPlatform, tExternal, tSourceExternal, item 1 to -2 of tExternalPath, tCurrentLocation, "Externals", tPlatform is "MacOSX"
       if the result is not empty then
          revStandaloneAddWarning tPlatform && tArch & ", external" && the result & ":" && quote & tExternalPath & quote
@@ -2590,37 +2722,37 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
       end if
       revAddExternal tExternal
    end repeat
-   
+
    local tSourceFile, tSourceFolder, tTargetFolder, tDestFolder
    repeat for each line tLib in sStandaloneSettingsA["jarFiles"]
       set the itemdelimiter to slash
       put item -1 of tLib into tSourceFile
       put item 1 to -2 of tLib into tSourceFolder
       put tCurrentLocation & slash & "Externals/JVM" into tDestFolder
-      
+
       revSBEnsureFolder tDestFolder
       revCopyModule tPlatform, tSourceFile, tSourceFile, \
             tSourceFolder, tCurrentLocation, "Externals/JVM", false
    end repeat
-   
+
    repeat for each line tLib in sStandaloneSettingsA["extension_code_resources"]
       set the itemdelimiter to slash
       put item -1 of tLib into tSourceFile
       put item 1 to -2 of tLib into tSourceFolder
       put tCurrentLocation & slash & "Externals" into tDestFolder
-      
+
       revSBEnsureFolder tDestFolder
       set the itemDelimiter to "."
       revCopyModule tPlatform, item 1 to -2 of tSourceFile, tSourceFile, \
             tSourceFolder, tCurrentLocation, "Externals", there is a folder tLib
    end repeat
-   
+
    // SN-2015-07-01: [[ Bug 15259 ]] We don't want the saving to be trapped by
    //  a saveStackRequest handler in the standalone stack
    lock messages
    save stack pStackFilePath
    unlock messages
-   
+
    -- MM-2013-04-05: [[ Bug 10756 ]] Make sure we're allowed to delete the stack before deleteing.
    set the cantDelete of stack pStackFilePath to false
    delete stack pStackFilePath
@@ -2673,7 +2805,7 @@ command revStandaloneDeployWithParams pTarget, pStackFilePath, pDeployInfo
    if the result is not empty then
       throw "Build failed for " & pTarget & ":" && the result
    end if
-   
+
    -- Again, present in the original, this will remove the stackfile we saved
    -- above.
    revDeleteFile pStackFilePath
@@ -2684,16 +2816,16 @@ command revRedirectMacOSResources pStandalonePath
    set the itemDelimiter to slash
    put item 1 to -2 of pStandalonePath into tOldRFolder
    put (item 1 to -2 of tOldRFolder) & "/Resources/_MacOS" into tNewRFolder
-   
+
    create folder (tOldRFolder & slash & "../Resources")
    create folder (tOldRFolder & slash & "../Resources/_MacOS")
-   
+
    revRedirectMacOSResourcesRecurse tOldRFolder, tNewRFolder
 end revRedirectMacOSResources
 
 command revRedirectMacOSResourcesRecurse pSourceFolder, pTargetFolder
    create folder pTargetFolder
-   
+
    local tFiles
    repeat for each line tFile in files(pSourceFolder)
       if tFile ends with ".dylib" then
@@ -2714,7 +2846,7 @@ command revRedirectMacOSResourcesRecurse pSourceFolder, pTargetFolder
             break
       end switch
    end repeat
-   
+
    local tFolder
    repeat for each line tFolder in folders(pSourceFolder)
       if tFolder is ".." then
@@ -2731,7 +2863,7 @@ command revRedirectMacOSResourcesRecurse pSourceFolder, pTargetFolder
       end if
       revRedirectMacOSResourcesRecurse pSourceFolder & slash & tFolder, pTargetFolder & slash & tFolder
    end repeat
-   
+
    if files(pSourceFolder) is empty and folders(pSourceFolder) is ".." then
       delete folder pSourceFolder
    end if
@@ -2740,7 +2872,7 @@ end revRedirectMacOSResourcesRecurse
 function revRedirectMacOSResourcesIsExecutable pFile
    local tIsExecutable
    put false into tIsExecutable
-   
+
    open file pFile for binary read
    read from file pFile for 1 int4
    if the result is not "eof" then
@@ -2751,7 +2883,7 @@ function revRedirectMacOSResourcesIsExecutable pFile
       end if
    end if
    close file pFile
-   
+
    return tIsExecutable
 end revRedirectMacOSResourcesIsExecutable
 

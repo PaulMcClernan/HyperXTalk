@@ -535,6 +535,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCHeapSpace;
 	case F_HTTP_PROXY_FOR_URL:
 		return new MCHTTPProxyForURL;
+	case F_IFF:
+		return new MCIff;
 	case F_INTERRUPT:
 		return new MCInterrupt;
 	case F_HA:
@@ -954,6 +956,8 @@ MCExpression *MCN_new_operator(int2 which)
 		return new MCBeginsWith;
 	case O_ENDS_WITH:
 		return new MCEndsWith;
+	case O_MATCHES:
+		return new MCMatches;
 	default:
 		return new MCExpression;
 	}

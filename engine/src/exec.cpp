@@ -1163,6 +1163,12 @@ MCVarref* MCExecContext::GetIt() const
     // MCServerScript object.
     return static_cast<MCServerScript *>(m_object . object) -> GetIt();
 #else
+    // Worker threads dispatch at the top level with no enclosing handler.
+    // They provide a dedicated variable via SetWorkerIt() so that
+    // MCEngineExecDispatch's post-dispatch SetItToValue() call can succeed.
+    if (m_worker_it != nil)
+        return m_worker_it;
+
     // We should never get here as execution only occurs within handlers unless
     // in server mode.
     assert(false);
@@ -1227,7 +1233,7 @@ void MCExecContext::UserThrow(MCStringRef p_error)
 
 MCObjectHandle MCExecContext::GetObjectHandle(void) const
 {
-    extern MCExecContext *MCECptr;
+    extern thread_local MCExecContext *MCECptr;
 	return MCECptr->GetObject()->GetHandle();
 }
 

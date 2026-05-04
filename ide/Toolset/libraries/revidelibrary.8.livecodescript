@@ -5170,7 +5170,10 @@ private on __setPropertyOfObject pObject, pProperty, pValue
    if tProperties["properties"][pProperty]["setter"] is not empty then
       dispatch tProperties["properties"][pProperty]["setter"] with pObject, pProperty, pValue
    else
-      set the pProperty of pObject to pValue
+      try
+         set the pProperty of pObject to pValue
+      catch tError
+      end try
    end if
    
 end __setPropertyOfObject
@@ -8495,7 +8498,13 @@ on revIDELoadFromProject pFilePath
       set the cRevProjectFilePath of stack tNewStackName to tFolderPath
       revIDEAddRecentStack pFilePath
       unlock screen
+      lock error dialogs
+      send "preOpenStack" to card 1 of stack tNewStackName
+      send "preOpenCard" to card 1 of stack tNewStackName
       go stack tNewStackName
+      send "openStack" to card 1 of stack tNewStackName
+      send "openCard" to card 1 of stack tNewStackName
+      unlock error dialogs
    else
       unlock screen
    end if

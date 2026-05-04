@@ -459,15 +459,12 @@ static void handle_signal(int sig)
         break;
     case SIGCHLD:
         {
-#if defined(_LINUX_DESKTOP)
+#ifdef FEATURE_MPLAYER
             MCPlayerHandle t_player = MCplayers;
-            // If we have some players waiting then deal with these first
             waitedpid = -1;
             if (t_player.IsValid())
             {
                 waitedpid = wait(NULL);
-                // Moving these two lines half fixes bug 5966 - however it still isn't quite right
-                // as there will still be some interaction between a player and shell command
                 while(t_player.IsValid())
                 {
                     if (t_player.IsValid() && waitedpid == t_player->getpid())
@@ -485,10 +482,6 @@ static void handle_signal(int sig)
             }
             else
             {
-                // Check to see if we have created a video window. If we have got to here it means
-                // that we could not start mplayer -- so the child thread has exited, but the player
-                // object has not had a chance to be created yet. TODO - investigate if there is a
-                // cleaner way of dealing with this situation.
                 if ( MClastvideowindow != DNULL )
                 {
                     gdk_window_hide(MClastvideowindow);
@@ -500,7 +493,9 @@ static void handle_signal(int sig)
                     MCS_checkprocesses();
                 }
             }
-#endif /* LINUX_DESKTOP */
+#else
+            MCS_checkprocesses();
+#endif
         }
         break;
     case SIGALRM:

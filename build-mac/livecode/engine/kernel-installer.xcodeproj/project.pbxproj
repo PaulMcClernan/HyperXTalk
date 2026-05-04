@@ -399,6 +399,13 @@
 			remoteGlobalIDString = BE13AE89CAF8762C216B4582;
 			remoteInfo = encode_version;
 		};
+		6CFFD597DC7548E0C1194CA0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AB727B4280723B69D64D9E3B /* libvlc.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 618E7389BD15C673A9784BFC;
+			remoteInfo = libvlc_headers;
+		};
 		6D021772DF7A74265CC71B15 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = CB32D41B211ED9E75CD4F862 /* libskia.xcodeproj */;
@@ -843,6 +850,7 @@
 		9F7DEEA8CE76066FCF0B1140 /* bsdiff_apply.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bsdiff_apply.cpp; sourceTree = "<group>"; };
 		A673E63F47694A4F2BD1272D /* libcustomcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcustomcrypto.a; path = ../prebuilt/lib/mac/libcustomcrypto.a; sourceTree = "<group>"; };
 		AA80E4E08AC7CD8D84819679 /* ios.gypi */ = {isa = PBXFileReference; explicitFileType = sourcecode; name = ios.gypi; path = ../config/ios.gypi; sourceTree = "<group>"; };
+		AB727B4280723B69D64D9E3B /* libvlc.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libvlc.xcodeproj; path = "../build-mac/livecode/thirdparty/libvlc/libvlc.xcodeproj"; sourceTree = SOURCE_ROOT; };
 		ADEF2FEE804612D02FFB7C22 /* libz.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libz.xcodeproj; path = "../build-mac/livecode/thirdparty/libz/libz.xcodeproj"; sourceTree = SOURCE_ROOT; };
 		B0757B7ECCF36BBECBFA1458 /* libcups.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcups.dylib; path = usr/lib/libcups.dylib; sourceTree = SDKROOT; };
 		B43C8CCC583723E6E5ABEB36 /* libicuuc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicuuc.a; path = ../prebuilt/lib/mac/libicuuc.a; sourceTree = "<group>"; };
@@ -938,33 +946,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		00DC9A3B0DA41BC56D264EFC /* Projects */ = {
-			isa = PBXGroup;
-			children = (
-				320DC582C7C17216FFD41590 /* engine-common.xcodeproj */,
-				586359D86871CB83EE4C64A4 /* fetch.xcodeproj */,
-				801F0EB1038EA8ED7763B64E /* kernel.xcodeproj */,
-				1E550B5C7CB577FEC69F0FF9 /* libbrowser.xcodeproj */,
-				DC2F68971B8D0DE0181120C6 /* libcpptest.xcodeproj */,
-				8123400C23AA3783F6E76666 /* libexpat.xcodeproj */,
-				26C633A508DE1B24023F0D8B /* libffi.xcodeproj */,
-				6E5B3FD5451A3CD2A6BA54D3 /* libfoundation.xcodeproj */,
-				971F24F3FA316A215D707DF6 /* libgif.xcodeproj */,
-				49328EA8DAAA9FB233085BFB /* libgraphics.xcodeproj */,
-				B5E826F75A8858289E271F97 /* libicu.xcodeproj */,
-				F7F61EB8A02CC61E0E65229F /* libjpeg.xcodeproj */,
-				95788A640CCD7F6B395FAEC1 /* libopenssl.xcodeproj */,
-				6609AC9B446913D3CEB8158B /* libpcre.xcodeproj */,
-				1246028F6C6B40E0208ECBC0 /* libpng.xcodeproj */,
-				54546687D02084613769B5DD /* libscript.xcodeproj */,
-				CB32D41B211ED9E75CD4F862 /* libskia.xcodeproj */,
-				ADEF2FEE804612D02FFB7C22 /* libz.xcodeproj */,
-				15BB88C009AA76C7A7721320 /* perfect.xcodeproj */,
-				B73FA0C087EE2902BBEA15C1 /* thirdparty.xcodeproj */,
-			);
-			name = Projects;
-			sourceTree = "<group>";
-		};
 		037BFBCD0117D69EF19C4C0D /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -1028,6 +1009,13 @@
 			sourceTree = "<group>";
 		};
 		48C527A1AE458E4148630CB6 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		5448C3B205D9C302356C915C /* Products */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -1130,11 +1118,39 @@
 			children = (
 				ABB7DC169D01A45F6D1CD99A /* Source */,
 				97D6A0A93B87023887E466E8 /* Intermediates */,
-				00DC9A3B0DA41BC56D264EFC /* Projects */,
+				83DC8756E119C92582461500 /* Projects */,
 				5515C3515B0AD043C6470FA1 /* Frameworks */,
 				7110CD65863F9B4EEBF412EC /* Products */,
 				845E6925C8E58108586644F5 /* Build */,
 			);
+			sourceTree = "<group>";
+		};
+		83DC8756E119C92582461500 /* Projects */ = {
+			isa = PBXGroup;
+			children = (
+				320DC582C7C17216FFD41590 /* engine-common.xcodeproj */,
+				586359D86871CB83EE4C64A4 /* fetch.xcodeproj */,
+				801F0EB1038EA8ED7763B64E /* kernel.xcodeproj */,
+				1E550B5C7CB577FEC69F0FF9 /* libbrowser.xcodeproj */,
+				DC2F68971B8D0DE0181120C6 /* libcpptest.xcodeproj */,
+				8123400C23AA3783F6E76666 /* libexpat.xcodeproj */,
+				26C633A508DE1B24023F0D8B /* libffi.xcodeproj */,
+				6E5B3FD5451A3CD2A6BA54D3 /* libfoundation.xcodeproj */,
+				971F24F3FA316A215D707DF6 /* libgif.xcodeproj */,
+				49328EA8DAAA9FB233085BFB /* libgraphics.xcodeproj */,
+				B5E826F75A8858289E271F97 /* libicu.xcodeproj */,
+				F7F61EB8A02CC61E0E65229F /* libjpeg.xcodeproj */,
+				95788A640CCD7F6B395FAEC1 /* libopenssl.xcodeproj */,
+				6609AC9B446913D3CEB8158B /* libpcre.xcodeproj */,
+				1246028F6C6B40E0208ECBC0 /* libpng.xcodeproj */,
+				54546687D02084613769B5DD /* libscript.xcodeproj */,
+				CB32D41B211ED9E75CD4F862 /* libskia.xcodeproj */,
+				AB727B4280723B69D64D9E3B /* libvlc.xcodeproj */,
+				ADEF2FEE804612D02FFB7C22 /* libz.xcodeproj */,
+				15BB88C009AA76C7A7721320 /* perfect.xcodeproj */,
+				B73FA0C087EE2902BBEA15C1 /* thirdparty.xcodeproj */,
+			);
+			name = Projects;
 			sourceTree = "<group>";
 		};
 		845E6925C8E58108586644F5 /* Build */ = {
@@ -1370,6 +1386,7 @@
 				A0F78B0CABDAF53D371DBD85 /* PBXTargetDependency */,
 				EFADEB57F9E6805BBBF70D52 /* PBXTargetDependency */,
 				0FB954E8A2730BF0D0D65AB9 /* PBXTargetDependency */,
+				2EDDA50398F0FDCDE239B879 /* PBXTargetDependency */,
 				1F98C2C125874FEF8D105B09 /* PBXTargetDependency */,
 				B5128DF7C2F296C34DC97280 /* PBXTargetDependency */,
 				638CA61388F857C34AF6BCD8 /* PBXTargetDependency */,
@@ -1461,6 +1478,10 @@
 				{
 					ProductGroup = C2F79B3EBB82927808C78A9C /* Products */;
 					ProjectRef = CB32D41B211ED9E75CD4F862 /* libskia.xcodeproj */;
+				},
+				{
+					ProductGroup = 5448C3B205D9C302356C915C /* Products */;
+					ProjectRef = AB727B4280723B69D64D9E3B /* libvlc.xcodeproj */;
 				},
 				{
 					ProductGroup = FA93CD190A5157CE1FD5386C /* Products */;
@@ -1972,6 +1993,11 @@
 			name = thirdparty_prebuilt_ffi;
 			targetProxy = 8B8A33ABAEB826D025DC7350 /* PBXContainerItemProxy */;
 		};
+		2EDDA50398F0FDCDE239B879 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libvlc_headers;
+			targetProxy = 6CFFD597DC7548E0C1194CA0 /* PBXContainerItemProxy */;
+		};
 		2F7918180D4DAE2A66E65E20 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = minimal_icu_data;
@@ -2410,6 +2436,8 @@
 				);
 				OTHER_LDFLAGS = (
 					"-weak_framework AVFoundation",
+					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib",
+					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib",
 					"-Wl,-platform_version",
 					"-Wl,macos",
 					"-Wl,11.0",
@@ -2514,6 +2542,8 @@
 				);
 				OTHER_LDFLAGS = (
 					"-weak_framework AVFoundation",
+					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib",
+					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib",
 					"-Wl,-platform_version",
 					"-Wl,macos",
 					"-Wl,11.0",
@@ -3066,6 +3096,8 @@
 				);
 				OTHER_LDFLAGS = (
 					"-weak_framework AVFoundation",
+					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib",
+					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib",
 					"-Wl,-platform_version",
 					"-Wl,macos",
 					"-Wl,11.0",

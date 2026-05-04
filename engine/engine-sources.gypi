@@ -663,6 +663,10 @@
 			'src/platform-recorder.cpp',
 			'src/platform-surface.cpp',
 			'src/platform-window.cpp',
+
+			# Group "VLC Player"
+			'src/vlc-player.h',
+			'src/vlc-player.cpp',
 			
 			# Group "Native Layer"
 			'src/native-layer.cpp',
@@ -705,6 +709,7 @@
 			'src/lnxkeymapping.cpp',
 			'src/lnxmisc.cpp',
 			'src/lnxmplayer.cpp',
+			'src/lnx-core-compat.cpp',
 			'src/lnxpsprinter.cpp',
 			'src/lnxspec.cpp',
 			'src/lnxstack.cpp',
@@ -721,6 +726,7 @@
 			'src/coretextlayout.mm',
 			'src/mac-abort.mm',
 			'src/mac-av-player.mm',
+			'src/vlc-player-mac.mm',
 			'src/mac-color.mm',
 			'src/mac-core.mm',
 			'src/mac-cursor.mm',
@@ -1259,7 +1265,8 @@
 				{
 					'sources!':
 					[
-						'src/player-platform.cpp',
+						'src/player-legacy.cpp',
+						'src/lnxmplayer.cpp',
 						'src/tilecachegl.cpp',
 						'src/tilecachegl3.x.cpp',
 						'src/glcontext.cpp',
