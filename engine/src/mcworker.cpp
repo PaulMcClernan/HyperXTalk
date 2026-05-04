@@ -573,7 +573,6 @@ void MCWorkerExecCreate(MCExecContext &ctxt,
         if (t_loaded)
             t_stack->setstringprop(ctxt, 0, P_SCRIPT, False, *t_script);
     }
-    }
 
     MCWorker *t_worker = new (nothrow) MCWorker(p_name);
     if (t_worker == nullptr)
