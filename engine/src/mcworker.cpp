@@ -10,6 +10,11 @@ Software Foundation.  */
 
 #include <cstdio>  // fprintf, stderr
 
+// Defined in libfoundation/src/foundation-value.cpp.
+// Drains the calling thread's value-pool free list, returning each slot to the
+// heap.  Must be called from worker threads before they exit to avoid leaks.
+extern void __MCValueDrainPoolForThread(void);
+
 #include "globdefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
@@ -168,8 +173,8 @@ void MCWorkerDeliverCallback(void *p_opaque)
         MCParameter *t_p = new (nothrow) MCParameter;
         if (t_p == nullptr)
             break;
-        // setvalueref_argument takes ownership of the retained ref.
-        t_p->setvalueref_argument(MCValueRetain(t_cb->params[i].value));
+        // setvalueref_argument retains the value internally; do not pre-retain.
+        t_p->setvalueref_argument(t_cb->params[i].value);
         if (t_first == nullptr)
             t_first = t_last = t_p;
         else
@@ -365,7 +370,8 @@ void MCWorker::RunLoop()
             MCParameter *t_p = new (nothrow) MCParameter;
             if (t_p == nullptr)
                 break;
-            t_p->setvalueref_argument(MCValueRetain(t_msg->params[i].value));
+            // setvalueref_argument retains the value internally; do not pre-retain.
+            t_p->setvalueref_argument(t_msg->params[i].value);
             if (t_first == nullptr)
                 t_first = t_last = t_p;
             else
@@ -417,6 +423,11 @@ void MCWorker::RunLoop()
     delete MCresult;
     MCresult          = nullptr;
     MCdefaultstackptr = nil;
+
+    // Return any values still cached in this thread's pool back to the heap.
+    // This must happen after all ValueRef-holding objects are destroyed above
+    // so that no pool slot is re-allocated during teardown.
+    __MCValueDrainPoolForThread();
 }
 
 // ---------------------------------------------------------------------------

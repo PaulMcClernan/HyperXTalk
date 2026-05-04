@@ -543,7 +543,7 @@ enum
     kMCActionsDrainDeletedObjects = 1 << 2,
 };
 
-extern uint32_t MCactionsrequired;
+extern thread_local uint32_t MCactionsrequired;
 extern void MCActionsDoRunSome(uint32_t mask);
 
 inline void MCActionsSchedule(uint32_t mask)

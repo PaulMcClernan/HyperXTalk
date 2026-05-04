@@ -532,6 +532,9 @@ void __MCLocaleFinalize();
 
 bool __MCValueInitialize(void);
 void __MCValueFinalize(void);
+// Drains only the calling thread's value pool, without touching the global
+// constant valuerefs.  Call this from worker threads before they exit.
+void __MCValueDrainPoolForThread(void);
 
 bool __MCStringInitialize(void);
 void __MCStringFinalize(void);

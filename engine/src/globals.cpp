@@ -508,7 +508,7 @@ char *MCsysencoding = nil;
 MCLocaleRef kMCBasicLocale = nil;
 MCLocaleRef kMCSystemLocale = nil;
 
-uint32_t MCactionsrequired = 0;
+thread_local uint32_t MCactionsrequired = 0;
 
 MCArrayRef MCenvironmentvariables;
 
