@@ -13,7 +13,7 @@ on preOpenStack
    revInternal__ConstrainStack the short name of me
    set the width of me to 426
    set the height of me to 113
-   --set the resizable of me to false
+   set the resizable of me to false
    set the destroyStack of me to true
    
    -- Make sure we use the screen of the menubar
@@ -79,7 +79,7 @@ on OpenCard
    end switch
    
    set the hilite of button "Show" to (the cDontShowFileAssociationsDialog of stack "revPreferences" is true)
-   --set the cantModify of me to true
+   set the cantModify of me to true
    set the visible of me to true
 end OpenCard
 
