@@ -316,10 +316,6 @@
     <None Include="..\..\..\extensions\libraries\macosmenubar\macosmenubar.lcb">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </None>
-    <None Include="..\..\..\extensions\libraries\macostoolbar\macostoolbar.lcb">
-      <ExcludedFromBuild>true</ExcludedFromBuild>
-    </None>
-
     <None Include="..\..\..\extensions\widgets\macbutton\macbutton.lcb">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </None>

@@ -148,12 +148,7 @@
     <Filter Include="libraries">
       <UniqueIdentifier>{91746794-0D1F-C637-2673-8F987201349D}</UniqueIdentifier>
     </Filter>
-    <Filter Include="libraries\macostoolbar">
-      <UniqueIdentifier>{E72ED6E5-4F4C-DED6-A422-9584D19FE61B}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="libraries\macostoolbar\_excluded_files">
-      <UniqueIdentifier>{158E591E-B6EA-0C85-8F5A-18EAFA09B4CE}</UniqueIdentifier>
-    </Filter>
+
     <Filter Include="libraries">
       <UniqueIdentifier>{91746794-0D1F-C637-2673-8F987201349D}</UniqueIdentifier>
     </Filter>
@@ -373,10 +368,6 @@
     <None Include="..\..\..\extensions\libraries\macosmenubar\macosmenubar.lcb">
       <Filter>libraries\macosmenubar\_excluded_files</Filter>
     </None>
-    <None Include="..\..\..\extensions\libraries\macostoolbar\macostoolbar.lcb">
-      <Filter>libraries\macostoolbar\_excluded_files</Filter>
-    </None>
-
     <None Include="..\..\..\extensions\widgets\macbutton\macbutton.lcb">
       <Filter>widgets\macbutton\_excluded_files</Filter>
     </None>

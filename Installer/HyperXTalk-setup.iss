@@ -261,9 +261,17 @@ Source: "{#SourceDir}\modules\lci\*"; \
     Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; ---- Packaged extensions ----
+; macOS-only, iOS-only and Emscripten-only extensions are excluded — they
+; contain no Windows-compatible binaries and their api.lcdoc files would
+; appear as orphaned entries in the Windows documentation browser.
 Source: "{#SourceDir}\packaged_extensions\*"; \
     DestDir: "{app}\packaged_extensions"; \
-    Flags: ignoreversion recursesubdirs createallsubdirs
+    Flags: ignoreversion recursesubdirs createallsubdirs; \
+    Excludes: "com.hyperxtalk.macos*,\
+               com.livecode.library.native.mac.*,\
+               com.livecode.widget.native.mac.*,\
+               com.livecode.widget.native.ios.*,\
+               com.livecode.widget.native.emscripten.*"
 
 ; ---- IDE Toolset (home stack, libraries, palettes, resources) ----
 ; This is the entire development environment UI layer. Without it
