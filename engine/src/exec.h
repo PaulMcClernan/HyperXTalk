@@ -1606,7 +1606,7 @@ public:
     // Worker-thread support: provide a fallback 'it' variable for contexts
     // that have no enclosing handler (used by MCWorker::RunLoop and
     // MCWorkerDeliverCallback so MCEngineExecDispatch can write 'it').
-    void SetWorkerIt(MCVariable *p_it)
+    void SetWorkerIt(MCVarref *p_it)
     {
         m_worker_it = p_it;
     }
@@ -1775,7 +1775,7 @@ private:
     // Used by worker threads, which have no enclosing handler at dispatch
     // time.  Set via SetWorkerIt(); checked by GetIt() as a fallback when
     // m_curhandler is nullptr (non-server builds only).
-    MCVariable *m_worker_it;
+    MCVarref *m_worker_it;
 
     MCStringRef m_itemdel;
     MCStringRef m_columndel;

@@ -184,11 +184,13 @@ void MCWorkerDeliverCallback(void *p_opaque)
     // write (the result is intentionally discarded here).
     MCVariable *t_it_var = nullptr;
     /* UNCHECKED */ MCVariable::createwithname(MCN_it, t_it_var);
+    MCVarref *t_it_ref = new (nothrow) MCVarref(t_it_var);
 
     MCExecContext t_ctxt;
-    t_ctxt.SetWorkerIt(t_it_var);
+    t_ctxt.SetWorkerIt(t_it_ref);
     MCEngineExecDispatch(t_ctxt, HT_MESSAGE, t_cb->message, &t_target, t_first);
 
+    delete t_it_ref;
     delete t_it_var;
 
     // Free the parameter list.
@@ -309,8 +311,10 @@ void MCWorker::RunLoop()
     // Create the worker thread's 'it' variable.  MCEngineExecDispatch writes
     // to 'it' after every dispatch; without an enclosing handler we need to
     // give the context a dedicated variable to absorb those writes.
+    // GetIt() returns MCVarref*, so wrap the variable in a simple MCVarref.
     MCVariable *t_it_var = nullptr;
     /* UNCHECKED */ MCVariable::createwithname(MCN_it, t_it_var);
+    MCVarref *t_it_ref = new (nothrow) MCVarref(t_it_var);
 
     // Register as the current worker on this thread.
     tls_current_worker = this;
@@ -374,7 +378,7 @@ void MCWorker::RunLoop()
         MCabortscript = False;
 
         MCExecContext t_ctxt;
-        t_ctxt.SetWorkerIt(t_it_var);
+        t_ctxt.SetWorkerIt(t_it_ref);
         MCEngineExecDispatch(t_ctxt, HT_MESSAGE, t_msg->message,
                              &t_target, t_first);
 
@@ -395,8 +399,8 @@ void MCWorker::RunLoop()
     // Tear down this thread's engine state.
     // -----------------------------------------------------------------------
     tls_current_worker = nullptr;
+    delete t_it_ref;
     delete t_it_var;
-    t_it_var = nullptr;
     delete MCresult;
     MCresult          = nullptr;
     MCdefaultstackptr = nil;
