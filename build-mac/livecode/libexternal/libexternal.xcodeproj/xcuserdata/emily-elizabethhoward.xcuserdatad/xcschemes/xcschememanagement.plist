@@ -12,17 +12,17 @@
 		<key>libExternal (host).xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>81</integer>
+			<integer>39</integer>
 		</dict>
 		<key>libExternal-symbol-exports.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>137</integer>
+			<integer>97</integer>
 		</dict>
 		<key>libExternal.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>43</integer>
+			<integer>70</integer>
 		</dict>
 	</dict>
 </dict>

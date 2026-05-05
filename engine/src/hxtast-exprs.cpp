@@ -6,8 +6,9 @@
  *   MCBinaryOperator, MCMultiBinaryOperator, MCUnaryOperator (virtual dispatch)
  *   MCMinus (special — handles both binary and unary negation)
  *   MCAnd, MCOr, MCConcat (direct MCExpression subclasses)
- *   MCProperty (stub — complex UI expression)
+ *   MCProperty (full — including tocount/ptype for count-form properties)
  *   MCChunk (full — handles the named MCCRef slot chain)
+ *   MCFunction / MCUnaryFunction / MCParamFunction (built-in functions)
  *
  * MCFuncref hxt_serialize/hxt_deserialize_body are in hxtast-stmts.cpp
  * because MCHandref is declared in keywords.h.
@@ -30,10 +31,15 @@
 #include "operator.h"   // MCBinaryOperator, MCIs, MCThere, MCAnd, MCOr, …
 #include "chunk.h"      // MCChunk, MCCRef
 #include "property.h"   // MCProperty
+#include "funcs.h"      // MCFunction, MCUnaryFunction, MCParamFunction
+#include "param.h"      // MCParameter
 #include "parsedef.h"
 
 // Free function declared in hxtast-base.cpp.
 extern bool hxt_serialize_expr(MCHXTASTWriter &w, const MCExpression *expr);
+
+// (s_hxt_new_func_id thread_local removed: MCN_new_function now assigns
+//  m_hxt_func_id directly after construction — no ctor dependency needed.)
 
 // (No RTTI dispatch function needed — each concrete operator class overrides
 //  hxt_expr_type() in operator.h, so the base-class hxt_serialize() methods
@@ -440,21 +446,34 @@ bool MCChunk::hxt_deserialize_body(MCHXTASTReader &r)
 }
 
 // ============================================================
-//  MCProperty  (stub — complex UI expression)
+//  MCProperty
 //
-//  MCProperty serialization is complex (requires Properties enum lookup,
-//  effective flag, custom property name, target chunk).
-//  A minimal implementation is provided; the full version can be added
-//  when property serialization becomes important for .hxtlib code.
+//  Binary layout (after begin_expr header):
+//    uint16_t  which           (Properties enum)
+//    uint8_t   effective       (0 or 1)
+//    uint8_t   tocount         (Chunk_term — CT_UNDEFINED if not a count expr)
+//    uint8_t   ptype           (Chunk_term — CT_UNDEFINED if not a count expr)
+//    uint32_t  customprop_idx  (string-table index; 0 = not a custom property)
+//    <expr>    customindex     (may be kHXTExpr_Null)
+//    <expr>    target          (MCChunk or kHXTExpr_Null)
+//
+//  The tocount / ptype fields are essential for count-form properties like
+//  "the number of words in X".  eval_ctxt() dispatches to eval_count_ctxt()
+//  when tocount != CT_UNDEFINED; without this field restored after
+//  deserialization it falls back to eval_object_property_ctxt(), which is
+//  incorrect and can crash.
 // ============================================================
 
 bool MCProperty::hxt_serialize(MCHXTASTWriter &w) const
 {
     w.begin_expr(kHXTExpr_Property, line, pos);
-    // Write the property id, effective flag, and target chunk.
     w.put_u16(uint16_t(which));
     w.put_u8(effective ? 1u : 0u);
-    // customprop name (may be nil)
+    // Serialise tocount and ptype so that count-form properties ("the number
+    // of words in X") round-trip correctly.
+    w.put_u8(uint8_t(tocount));
+    w.put_u8(uint8_t(ptype));
+    // customprop name (may be nil — index 0 = empty string)
     uint32_t cpname_idx = customprop.IsSet()
                           ? w.intern_nameref(*customprop)
                           : 0u;
@@ -468,11 +487,17 @@ bool MCProperty::hxt_serialize(MCHXTASTWriter &w) const
 
 bool MCProperty::hxt_deserialize_body(MCHXTASTReader &r)
 {
-    uint16_t which_v = 0;
-    uint8_t  eff_v   = 0;
-    if (!r.get_u16(which_v) || !r.get_u8(eff_v)) return false;
-    which     = Properties(which_v);
+    uint16_t which_v  = 0;
+    uint8_t  eff_v    = 0;
+    uint8_t  tocount_b = 0;
+    uint8_t  ptype_b   = 0;
+    if (!r.get_u16(which_v) || !r.get_u8(eff_v) ||
+        !r.get_u8(tocount_b) || !r.get_u8(ptype_b))
+        return false;
+    which   = Properties(which_v);
     effective = eff_v ? True : False;
+    tocount = Chunk_term(tocount_b);
+    ptype   = Chunk_term(ptype_b);
 
     // customprop name
     MCNameRef cpn = nullptr;
@@ -492,4 +517,186 @@ bool MCProperty::hxt_deserialize_body(MCHXTASTReader &r)
     target.Reset(static_cast<MCChunk *>(tgt));
 
     return r.ok();
+}
+
+// ============================================================
+//  MCChunkOffset — offset()/lineOffset()/etc. bespoke subclass
+//
+//  Binary layout (kHXTExpr_BuiltinFunc, after the common header):
+//    uint16_t  func_id   (written by base MCFunction::hxt_serialize)
+//    <expr>    part      (required — the needle)
+//    <expr>    whole     (required — the haystack)
+//    <expr>    offset    (optional start — kHXTExpr_Null when absent)
+//
+//  The 'delimiter' field is set by the concrete subclass constructor
+//  (MCOffset → CT_CHARACTER, MCItemOffset → CT_ITEM, etc.) so it does
+//  not need to be written.
+// ============================================================
+
+bool MCChunkOffset::hxt_serialize(MCHXTASTWriter &w) const
+{
+    w.begin_expr(kHXTExpr_BuiltinFunc, line, pos);
+    w.put_u16(uint16_t(m_hxt_func_id));
+    if (!hxt_serialize_expr(w, part))   return false;
+    if (!hxt_serialize_expr(w, whole))  return false;
+    if (!hxt_serialize_expr(w, offset)) return false;   // writes kHXTExpr_Null if null
+    return true;
+}
+
+bool MCChunkOffset::hxt_deserialize_body(MCHXTASTReader &r)
+{
+    // func_id was consumed by the factory before hxt_deserialize_body is called.
+    part   = MCExpression::hxt_deserialize(r); if (!r.ok()) return false;
+    whole  = MCExpression::hxt_deserialize(r); if (!r.ok()) return false;
+    offset = MCExpression::hxt_deserialize(r); if (!r.ok()) return false;
+    // part and whole are required; null means serialization was corrupt.
+    if (part == nullptr || whole == nullptr) return false;
+    return true;
+}
+
+// ============================================================
+//  MCFunction — built-in function base class
+//
+//  Binary layout (kHXTExpr_BuiltinFunc, after begin_expr header):
+//    uint16_t  func_id        (Functions enum value, from m_hxt_func_id)
+//    uint16_t  param_count    (0 for constant, 1 for unary, N for param)
+//    <expr>[param_count]
+//
+//  The factory in hxtast-base.cpp reads func_id and calls MCN_new_function to
+//  create the right subclass, then calls hxt_deserialize_body which delegates
+//  to the virtual hxt_read_params.
+//
+//  Custom MCFunction subclasses (MCArrayEncode, MCWithin, etc.) that have
+//  bespoke fields fall back to the base hxt_write_params / hxt_read_params
+//  (param_count = 0), so they will not correctly restore their arguments from
+//  ASTN.  This is documented; the SRCS fallback handles those rare cases.
+// ============================================================
+
+// ── MCFunction::MCFunction() ─────────────────────────────────────────────
+// Initialises m_hxt_func_id to 0.  MCN_new_function() assigns the correct
+// Functions enum value immediately after construction via static_cast, so
+// there is no thread_local dependency here.
+
+MCFunction::MCFunction()
+    : m_hxt_func_id(0)
+{
+}
+
+// ── MCFunction::hxt_serialize ────────────────────────────────────────────
+
+bool MCFunction::hxt_serialize(MCHXTASTWriter &w) const
+{
+    w.begin_expr(kHXTExpr_BuiltinFunc, line, pos);
+    w.put_u16(uint16_t(m_hxt_func_id));
+    return hxt_write_params(w);
+}
+
+// ── MCFunction::hxt_deserialize_body ─────────────────────────────────────
+// func_id was already read by the factory; just restore params.
+
+bool MCFunction::hxt_deserialize_body(MCHXTASTReader &r)
+{
+    return hxt_read_params(r);
+}
+
+// ── MCFunction base param helpers (MCConstantFunction path) ──────────────
+// Writes / reads param_count = 0.  If a future format writes a non-zero
+// count here, the reader skips the extra expressions gracefully.
+
+bool MCFunction::hxt_write_params(MCHXTASTWriter &w) const
+{
+    w.put_u16(0);   // no parameters
+    return true;
+}
+
+bool MCFunction::hxt_read_params(MCHXTASTReader &r)
+{
+    uint16_t count = 0;
+    if (!r.get_u16(count)) return false;
+    // Skip any unexpected expressions so the stream stays aligned.
+    for (uint16_t i = 0; i < count; ++i)
+    {
+        MCExpression *e = MCExpression::hxt_deserialize(r);
+        if (!r.ok()) return false;
+        delete e;
+    }
+    return true;
+}
+
+// ── MCUnaryFunction param helpers ─────────────────────────────────────────
+// Serializes / deserializes the single m_expression parameter.
+
+bool MCUnaryFunction::hxt_write_params(MCHXTASTWriter &w) const
+{
+    w.put_u16(1);   // one parameter
+    return hxt_serialize_expr(w, m_expression);
+}
+
+bool MCUnaryFunction::hxt_read_params(MCHXTASTReader &r)
+{
+    uint16_t count = 0;
+    if (!r.get_u16(count)) return false;
+    if (count > 0)
+    {
+        m_expression = MCExpression::hxt_deserialize(r);
+        if (!r.ok()) return false;
+        // Skip any extra expressions (shouldn't happen, but be defensive).
+        for (uint16_t i = 1; i < count; ++i)
+        {
+            MCExpression *e = MCExpression::hxt_deserialize(r);
+            if (!r.ok()) return false;
+            delete e;
+        }
+    }
+    return true;
+}
+
+// ── MCParamFunction param helpers ─────────────────────────────────────────
+// Serializes / deserializes the MCParameter linked list (variable arity).
+
+bool MCParamFunction::hxt_write_params(MCHXTASTWriter &w) const
+{
+    // Count parameters.
+    uint16_t n = 0;
+    for (MCParameter *p = params; p != nullptr; p = p->getnext())
+        ++n;
+    w.put_u16(n);
+    for (MCParameter *p = params; p != nullptr; p = p->getnext())
+    {
+        if (!hxt_serialize_expr(w, p->getexp()))
+            return false;
+    }
+    return true;
+}
+
+bool MCParamFunction::hxt_read_params(MCHXTASTReader &r)
+{
+    uint16_t count = 0;
+    if (!r.get_u16(count)) return false;
+
+    MCParameter *head = nullptr;
+    MCParameter *tail = nullptr;
+    for (uint16_t i = 0; i < count; ++i)
+    {
+        MCExpression *e = MCExpression::hxt_deserialize(r);
+        if (!r.ok())
+        {
+            // Clean up whatever we built.
+            while (head != nullptr)
+            {
+                MCParameter *next = head->getnext();
+                delete head;
+                head = next;
+            }
+            return false;
+        }
+        MCParameter *p = new MCParameter;
+        p->setexp(e);
+        p->setnext(nullptr);
+        if (head == nullptr) head = p;
+        else                 tail->setnext(p);
+        tail = p;
+    }
+    params = head;
+    return true;
 }

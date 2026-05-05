@@ -140,11 +140,19 @@
  *
  * ── MCProperty record (HXTExprType = kHXTExpr_Property) ──────
  *
- *  uint16_t  which          (Properties enum value)
- *  uint8_t   effective      (0 or 1)
+ *  uint16_t  which              (Properties enum value)
+ *  uint8_t   effective          (0 or 1)
+ *  uint8_t   tocount            (Chunk_term — CT_UNDEFINED when not a count form)
+ *  uint8_t   ptype              (Chunk_term — CT_UNDEFINED when not a count form)
  *  uint32_t  customprop_stridx  (0 = not a custom property)
  *  <expression>  customindex    (may be kHXTExpr_Null)
  *  <expression>  target         (MCChunk for the target object; may be Null)
+ *
+ *  Note: tocount and ptype MUST be persisted.  eval_ctxt() dispatches to
+ *  eval_count_ctxt() only when tocount != CT_UNDEFINED.  Omitting these
+ *  fields causes "the number of words in X" to evaluate via the wrong path
+ *  (eval_object_property_ctxt) after ASTN deserialization, which will
+ *  produce wrong results or a crash.
  *
  * ── MCBuiltinFunc record (HXTExprType = kHXTExpr_BuiltinFunc) ─
  *
@@ -178,7 +186,18 @@
 // ============================================================
 
 static constexpr uint16_t kASTNFmtMajor = 1;
-static constexpr uint16_t kASTNFmtMinor = 0;
+// Minor version history:
+//   0 — initial release
+//   1 — MCProperty record gains tocount (uint8) + ptype (uint8) after
+//       the effective byte; MCDelete statement record added.
+//   2 — MCFunction (kHXTExpr_BuiltinFunc) fully implemented: MCConstantFunction,
+//       MCUnaryFunction, and MCParamFunction subclasses now serialize /
+//       deserialize their parameter expressions correctly.
+//   3 — MCChunkOffset (offset, lineOffset, wordOffset, itemOffset, etc.)
+//       gains hxt_serialize/hxt_deserialize_body: part + whole + optional offset.
+//       MCN_new_function now assigns m_hxt_func_id post-construction (no
+//       thread_local dependency); fixes silent func_id=0 bug.
+static constexpr uint16_t kASTNFmtMinor = 3;
 
 static constexpr uint8_t kASTNMagic[8] = {
     'H', 'X', 'T', 'A', 'S', 'T', 'N', '\0'

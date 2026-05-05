@@ -7,22 +7,22 @@
 		<key>kernel-development Support.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>73</integer>
+			<integer>174</integer>
 		</dict>
 		<key>kernel-development.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>55</integer>
+			<integer>165</integer>
 		</dict>
 		<key>run-test-kernel-development.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>167</integer>
+			<integer>162</integer>
 		</dict>
 		<key>test-kernel-development.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>135</integer>
+			<integer>107</integer>
 		</dict>
 	</dict>
 </dict>

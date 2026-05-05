@@ -12,12 +12,12 @@
 		<key>libbrowser (host).xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>59</integer>
+			<integer>32</integer>
 		</dict>
 		<key>libbrowser.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>34</integer>
+			<integer>128</integer>
 		</dict>
 	</dict>
 </dict>

@@ -539,39 +539,103 @@ void MCWorkerExecCreate(MCExecContext &ctxt,
         return;
     }
 
-    // Create a hidden script-only stack to host the worker's script.
+    // ── Choose the right stack-creation path ─────────────────────────────────
+    //
+    // If p_script_file ends in ".hxtlib", delegate entirely to the same loader
+    // path used by "start using" / the stack-open machinery.  That path reads
+    // the binary container, validates the magic, and calls
+    // MCStack::setascompiledlib_from_astn() to reconstruct hlist from the ASTN
+    // section — exactly what is needed here.
+    //
+    // For any other file (or no file) we follow the original plain-text-script
+    // path: create a blank script-only stack and optionally load a .livecodescript
+    // source file into it.
+
     MCStack *t_stack = nullptr;
-    MCStackSecurityCreateStack(t_stack);
-    if (t_stack == nullptr)
+
+    bool t_is_hxtlib = false;
+    if (p_script_file != nullptr && !MCStringIsEmpty(p_script_file))
     {
-        ctxt.UserThrow(MCSTR("create worker: failed to create backing stack"));
-        return;
+        // Case-insensitive suffix check for ".hxtlib".
+        t_is_hxtlib = MCStringEndsWith(p_script_file, MCSTR(".hxtlib"),
+                                        kMCStringOptionCompareCaseless);
     }
 
-    MCdispatcher->appendstack(t_stack);
-    t_stack->setparent(MCdispatcher->gethome());
-    t_stack->setflag(False, F_VISIBLE);
-    t_stack->setasscriptonly(kMCEmptyString);
+    if (t_is_hxtlib)
+    {
+        // ── .hxtlib path ─────────────────────────────────────────────────────
+        // trytoreadhxtlibstack creates the MCStack, populates its hlist from
+        // the ASTN section, and sets the compiled-lib / script-only flags.
+        const char *t_err = nullptr;
+        IO_stat t_io = MCdispatcher->trytoreadhxtlibstack(
+                            p_script_file, MCdispatcher->gethome(),
+                            t_stack, t_err);
 
+        if (t_io == IO_ERROR || t_stack == nullptr)
+        {
+            if (t_err != nullptr)
+            {
+                MCStringRef t_err_str = nullptr;
+                if (MCStringCreateWithCString(t_err, t_err_str))
+                {
+                    ctxt.UserThrow(t_err_str);
+                    MCValueRelease(t_err_str);
+                }
+                else
+                    ctxt.UserThrow(MCSTR("create worker: failed to load .hxtlib file"));
+            }
+            else
+            {
+                ctxt.UserThrow(MCSTR("create worker: failed to load .hxtlib file"));
+            }
+            return;
+        }
+
+        // trytoreadhxtlibstack does NOT append to the dispatcher's stack list
+        // (that is done by the caller in the normal open-stack path), so we do
+        // it here ourselves — same as the text-script path below.
+        MCdispatcher->appendstack(t_stack);
+        t_stack->setflag(False, F_VISIBLE);
+    }
+    else
+    {
+        // ── Plain text-script path ────────────────────────────────────────────
+        MCStackSecurityCreateStack(t_stack);
+        if (t_stack == nullptr)
+        {
+            ctxt.UserThrow(MCSTR("create worker: failed to create backing stack"));
+            return;
+        }
+
+        MCdispatcher->appendstack(t_stack);
+        t_stack->setparent(MCdispatcher->gethome());
+        t_stack->setflag(False, F_VISIBLE);
+        t_stack->setasscriptonly(kMCEmptyString);
+
+        if (p_script_file != nullptr && !MCStringIsEmpty(p_script_file))
+        {
+            MCAutoStringRef t_script;
+            bool t_loaded = MCS_loadtextfile(p_script_file, &t_script);
+            if (t_loaded)
+                t_stack->setstringprop(ctxt, 0, P_SCRIPT, False, *t_script);
+        }
+    }
+
+    // ── Name the backing stack ────────────────────────────────────────────────
     MCAutoStringRef t_stack_name;
     if (!MCStringFormat(&t_stack_name, "__worker_%@", p_name))
     {
+        MCdispatcher->destroystack(t_stack, True);
         ctxt.LegacyThrow(EE_NO_MEMORY);
         return;
     }
     t_stack->setstringprop(ctxt, 0, P_NAME, False, *t_stack_name);
 
-    if (p_script_file != nullptr && !MCStringIsEmpty(p_script_file))
-    {
-        MCAutoStringRef t_script;
-        bool t_loaded = MCS_loadtextfile(p_script_file, &t_script);
-        if (t_loaded)
-            t_stack->setstringprop(ctxt, 0, P_SCRIPT, False, *t_script);
-    }
-
+    // ── Start the worker thread ───────────────────────────────────────────────
     MCWorker *t_worker = new (nothrow) MCWorker(p_name);
     if (t_worker == nullptr)
     {
+        MCdispatcher->destroystack(t_stack, True);
         ctxt.LegacyThrow(EE_NO_MEMORY);
         return;
     }

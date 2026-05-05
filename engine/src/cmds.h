@@ -580,6 +580,8 @@ public:
 	virtual ~MCDelete();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
+    virtual bool hxt_serialize(MCHXTASTWriter &w) const override;
+    virtual bool hxt_deserialize_body(MCHXTASTReader &r) override;
 };
 
 class MCChangeProp : public MCStatement

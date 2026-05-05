@@ -7,32 +7,32 @@
 		<key>kernel-server (host) Support.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>104</integer>
+			<integer>33</integer>
 		</dict>
 		<key>kernel-server (host).xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>157</integer>
+			<integer>186</integer>
 		</dict>
 		<key>kernel-server Support.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>94</integer>
+			<integer>26</integer>
 		</dict>
 		<key>kernel-server.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>120</integer>
+			<integer>77</integer>
 		</dict>
 		<key>run-test-kernel-server.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>57</integer>
+			<integer>139</integer>
 		</dict>
 		<key>test-kernel-server.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>28</integer>
+			<integer>73</integer>
 		</dict>
 	</dict>
 </dict>

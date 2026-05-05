@@ -741,3 +741,125 @@ bool MCFuncref::hxt_deserialize_body(MCHXTASTReader &r)
     *function.getparams() = p;
     return r.ok();
 }
+
+// ── MCDelete ──────────────────────────────────────────────────────────────
+//
+// Binary layout (after begin_stmt header):
+//   uint8_t  form
+//     0 = chunk targets (delete <chunk>)
+//     1 = file          (delete file <expr>, directory flag follows)
+//     2 = url           (delete url <expr>)
+//     3 = var           (delete variable <varref>)
+//     4 = session       (delete session)
+//     5 = worker        (delete worker <expr>)
+//     6 = worker-self   (delete worker, no name)
+//
+//   For form 0:  <expr>   targets chunk
+//   For form 1:  uint8_t  is_directory + <expr>  file
+//   For form 2:  <expr>   url expression
+//   For form 3:  <expr>   var reference
+//   For form 4:  (nothing)
+//   For form 5:  <expr>   worker_name expression
+//   For form 6:  (nothing)
+//
+// The most common form in .hxtlib worker scripts is form 0
+// (e.g. "delete the last char of tResults").
+
+bool MCDelete::hxt_serialize(MCHXTASTWriter &w) const
+{
+    w.begin_stmt(S_DELETE, line, pos);
+
+    if (targets != nullptr)
+    {
+        w.put_u8(0);  // form: chunk targets
+        hxt_serialize_expr(w, targets);
+    }
+    else if (url)
+    {
+        // url=True AND file=urlExpression (both set by parser).
+        // Must check url before the generic file != nullptr test below.
+        w.put_u8(2);
+        hxt_serialize_expr(w, file);
+    }
+    else if (file != nullptr)
+    {
+        w.put_u8(1);  // form: file (or directory)
+        w.put_u8(directory ? 1u : 0u);
+        hxt_serialize_expr(w, file);
+    }
+    else if (var != nullptr)
+    {
+        w.put_u8(3);  // form: var
+        hxt_serialize_expr(w, var);
+    }
+    else if (session)
+    {
+        w.put_u8(4);  // form: session (no extra data)
+    }
+    else if (worker_name != nullptr)
+    {
+        w.put_u8(5);  // form: delete named worker
+        hxt_serialize_expr(w, worker_name);
+    }
+    else
+    {
+        w.put_u8(6);  // form: delete current worker
+    }
+    return true;
+}
+
+bool MCDelete::hxt_deserialize_body(MCHXTASTReader &r)
+{
+    uint8_t form_b = 0;
+    if (!r.get_u8(form_b)) return false;
+
+    switch (form_b)
+    {
+        case 0:  // chunk targets
+        {
+            MCExpression *tgt_expr = MCExpression::hxt_deserialize(r);
+            if (!r.ok()) return false;
+            // The serializer always writes an MCChunk here; static_cast is safe.
+            targets = static_cast<MCChunk *>(tgt_expr);
+            break;
+        }
+        case 1:  // file or directory
+        {
+            uint8_t is_dir = 0;
+            if (!r.get_u8(is_dir)) return false;
+            directory = is_dir ? True : False;
+            file = MCExpression::hxt_deserialize(r);
+            if (!r.ok()) return false;
+            break;
+        }
+        case 2:  // url
+        {
+            url  = True;
+            file = MCExpression::hxt_deserialize(r);
+            if (!r.ok()) return false;
+            break;
+        }
+        case 3:  // var
+        {
+            MCExpression *var_expr = MCExpression::hxt_deserialize(r);
+            if (!r.ok()) return false;
+            // The serializer always writes an MCVarref here; static_cast is safe.
+            var = static_cast<MCVarref *>(var_expr);
+            break;
+        }
+        case 4:  // session (no extra data)
+            session = true;
+            break;
+        case 5:  // delete named worker
+            worker = true;
+            worker_name = MCExpression::hxt_deserialize(r);
+            if (!r.ok()) return false;
+            break;
+        case 6:  // delete current worker
+            worker = true;
+            break;
+        default:
+            return false;
+    }
+    return r.ok();
+}

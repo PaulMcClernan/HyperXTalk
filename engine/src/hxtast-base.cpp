@@ -114,10 +114,16 @@ MCStatement *MCStatement::hxt_deserialize(MCHXTASTReader &r)
 
 bool MCExpression::hxt_serialize(MCHXTASTWriter &w) const
 {
-    // Subclass did not override hxt_serialize.
-    // The expression header (type byte + line + pos) is written by the
-    // subclass's override before calling any helpers, so nothing extra here.
-    // TODO: replace with assert(false) once all subclasses are implemented.
+    // Subclass did not override hxt_serialize.  Write the kHXTExpr_Null
+    // sentinel (1 byte = 0x00) so the stream stays parseable — the expression
+    // will deserialize as absent/null rather than corrupting subsequent bytes.
+    // This is better than writing nothing, which would cause the reader to
+    // misinterpret the next field's bytes as this expression's type byte.
+    fprintf(stderr,
+        "hxtast: WARNING: MCExpression subclass at line %d has no "
+        "hxt_serialize override — serializing as null\n",
+        int(line));
+    w.put_u8(uint8_t(kHXTExpr_Null));
     return true;
 }
 

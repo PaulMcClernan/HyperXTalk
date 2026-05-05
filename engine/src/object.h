@@ -639,6 +639,17 @@ protected:
 
 	// The native layer associated with this object
 	MCNativeLayer* m_native_layer;
+
+    // HXT: 1-slot inline property dispatch cache.
+    // Valid for non-effective, non-array-prop accesses (the common hot path).
+    // The cache is keyed on the Properties enum value; m_ic_prop_info == nullptr
+    // means the slot is empty.  Both fields are mutable because the cache is
+    // logically a transparent optimisation that does not change observable state.
+    // Writes are a benign data-race: aligned pointer stores are atomic on x86/ARM64,
+    // and the same MCPropertyInfo* (a pointer into a static class table) would
+    // always be stored — so concurrent writers cannot corrupt the slot.
+    mutable Properties      m_ic_prop_key;
+    mutable MCPropertyInfo *m_ic_prop_info;
 	
 public:
     

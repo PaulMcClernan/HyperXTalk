@@ -168,9 +168,13 @@ MCObject::MCObject()
     // Objects inherit the theme by default
     m_theme = kMCInterfaceThemeEmpty;
     m_theme_type = kMCPlatformControlTypeGeneric;
-    
+
 	// IM-2016-01-21: Initialize native layer to nil
 	m_native_layer = nil;
+
+    // HXT: inline property dispatch cache — start empty.
+    m_ic_prop_key  = P_CUSTOM;
+    m_ic_prop_info = nullptr;
 
     // Attach ourselves to an object pool.
     MCDeletedObjectsOnObjectCreated(this);
@@ -276,7 +280,11 @@ MCObject::MCObject(const MCObject &oref)
     
 	// IM-2016-01-21: Initialize native layer to nil
 	m_native_layer = nil;
-	
+
+    // HXT: inline property dispatch cache — start empty in clones too.
+    m_ic_prop_key  = P_CUSTOM;
+    m_ic_prop_info = nullptr;
+
     // Attach ourselves to an object pool.
     MCDeletedObjectsOnObjectCreated(this);
 }

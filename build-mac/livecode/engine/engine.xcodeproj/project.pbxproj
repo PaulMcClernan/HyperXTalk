@@ -120,7 +120,6 @@
 		0E29D7789DAEE5721E072545 /* libskia_opt_sse42 (host).a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B8EFB08807A5659D3DAB1EE /* libskia_opt_sse42 (host).a */; };
 		0F18348D6BB9F6D6C87E37FC /* Localisation.strings in Resources */ = {isa = PBXBuildFile; fileRef = FF1ECF3BF79519BA821A3EF9 /* Localisation.strings */; };
 		10A03572ECDE4726C0F03BAE /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 445CF12E072C34F29DBFD95B /* IOKit.framework */; };
-		114FF95221FE4B567682EC17 /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 51785C2E9DF34B3C5FC7902B /* libffi.a */; };
 		1220619FE1C93A81BACECF22 /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C9395DE81FF5B7C6F006FEF9 /* libffi.a */; };
 		129A59BDE8371B0584DBA75F /* libskia_opt_sse41 (host).a in Frameworks */ = {isa = PBXBuildFile; fileRef = CDAD92C927D13F96CC3C0B18 /* libskia_opt_sse41 (host).a */; };
 		12C8A8DEC5EDC10194D35919 /* libskia_opt_none.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 369F0CAA6DB00AB55E8BD758 /* libskia_opt_none.a */; };
@@ -283,7 +282,6 @@
 		ABB32D543499B0B549C7FF2C /* libicuio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 30DBA9DA1D200DDDD99D4892 /* libicuio.a */; };
 		ABBDA916E71A33C69FAD6DF4 /* libcurl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E87CA7845C223C38DF1A7D30 /* libcurl.dylib */; };
 		AF2433D5BC588DC2B9EAF094 /* HyperXTalkDoc.icns in Resources */ = {isa = PBXBuildFile; fileRef = E03DF4A54F17DE97AB0EE7DD /* HyperXTalkDoc.icns */; };
-		B1FDA62BF2315BDB3254D0F8 /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 51785C2E9DF34B3C5FC7902B /* libffi.a */; };
 		B33958B83DA912A50B697C2C /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A81BB630B5F0CF5E4C5F6036 /* JavaScriptCore.framework */; };
 		B34574FFCB739392091FEA0F /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AA248C0E9843DD2958D03B8A /* libjpeg.a */; };
 		B3F441BCF2ED85B5AB456614 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6CA9CDA4EA72652D029E05F2 /* libskia.a */; };
@@ -321,7 +319,6 @@
 		D6063FD3FBFE2EBB974D9F80 /* stdscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D5DA91B5C51EE6E84A5F2682 /* stdscript.a */; };
 		D7B48BF12B2AA8BD2A8F5F77 /* stdscript.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D5DA91B5C51EE6E84A5F2682 /* stdscript.a */; };
 		D7C357503EC3DB122845A122 /* libbrowser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 042B0B4AEE827523B371BD9C /* libbrowser.a */; };
-		D821BD6F62E1E804D66106A3 /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 51785C2E9DF34B3C5FC7902B /* libffi.a */; };
 		D913F2AA7CB08D84A5C8F5B2 /* libkernel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C4858D912F1C4E0CA1293350 /* libkernel.a */; };
 		D98A451435092684FE32C4D7 /* libGraphics (host).a in Frameworks */ = {isa = PBXBuildFile; fileRef = 96021B41BFD0C6028795E025 /* libGraphics (host).a */; };
 		D9C07E32652A626D545C7B62 /* stacksecurity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 36DB9478D7E0DC0BF4E385CF /* stacksecurity.cpp */; };
@@ -362,7 +359,6 @@
 		F4B4787A032FA3A143B8835E /* libskia_opt_sse41.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 280346BD7E86EE38C0D2C9B3 /* libskia_opt_sse41.a */; };
 		F6D0A4DBA35D4C985D362021 /* stdscript-host.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BD922313FB6480CFE98E68CC /* stdscript-host.a */; };
 		F6DF4CCB3AE38F11F8071157 /* libkernel-standalone.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C46C7359927E6C0AE1CF943 /* libkernel-standalone.a */; };
-		F78A54F297962A8D33B75601 /* libffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 51785C2E9DF34B3C5FC7902B /* libffi.a */; };
 		F810C917D09705864AA6182F /* libicuio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 30DBA9DA1D200DDDD99D4892 /* libicuio.a */; };
 		F8F107272D4D8CA0D52A3A76 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AA248C0E9843DD2958D03B8A /* libjpeg.a */; };
 		FA2A3CFD301607CBBDE5C4FB /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA036E985B1015AF9FE9356 /* ApplicationServices.framework */; };
@@ -2515,7 +2511,8 @@
 				BE0FDBAF181950581A833063 /* libsecurity-community.a in Frameworks */,
 				9682AD85DF7893BD94D39E00 /* libkernel.a in Frameworks */,
 				3E21CFBF308EA95B3216069E /* libFoundation.a in Frameworks */,
-				F351EC31477A4F41CAA3C2B1 /* libz.a in Frameworks */,				C41366932C2BE278141618BC /* libGraphics.a in Frameworks */,
+				F351EC31477A4F41CAA3C2B1 /* libz.a in Frameworks */,
+				C41366932C2BE278141618BC /* libGraphics.a in Frameworks */,
 				58FA9DCE2E7BA73126FD38D3 /* libgif.a in Frameworks */,
 				6910D786D5435DEA8CAA17EB /* libpng.a in Frameworks */,
 				F8F107272D4D8CA0D52A3A76 /* libjpeg.a in Frameworks */,
@@ -2621,7 +2618,8 @@
 				90DE5BED0696B8533CCD2D2E /* libkernel-server.a in Frameworks */,
 				84F1834405447D6618488A80 /* libFoundation.a in Frameworks */,
 				E63B20C1B36F953C9C98C916 /* libGraphics.a in Frameworks */,
-				ECBDE559FEFC81745265B57A /* libz.a in Frameworks */,				30AFCACC997EFF39F020FAF6 /* libgif.a in Frameworks */,
+				ECBDE559FEFC81745265B57A /* libz.a in Frameworks */,
+				30AFCACC997EFF39F020FAF6 /* libgif.a in Frameworks */,
 				291517253FD3AEBAC1CAB4C2 /* libpng.a in Frameworks */,
 				B34574FFCB739392091FEA0F /* libjpeg.a in Frameworks */,
 				DE01E314C9DA38EE7F0F9297 /* libskia.a in Frameworks */,
@@ -2672,7 +2670,8 @@
 				DCFF28413CB0634B58F5FBE9 /* libsecurity-community.a in Frameworks */,
 				9D9B1554CB46B1A6A5D4934D /* libkernel.a in Frameworks */,
 				719D928A4F1EBD8CA9E12D2D /* libFoundation.a in Frameworks */,
-				DA83D7A354BE791CF71B12BC /* libz.a in Frameworks */,				776FE8F366965DFF81BC6C27 /* libGraphics.a in Frameworks */,
+				DA83D7A354BE791CF71B12BC /* libz.a in Frameworks */,
+				776FE8F366965DFF81BC6C27 /* libGraphics.a in Frameworks */,
 				D4D4DBC7ECC46BFAFC82487B /* libgif.a in Frameworks */,
 				1FC5C9471E7E5165638EA806 /* libpng.a in Frameworks */,
 				87F4115622F0740CD307182D /* libjpeg.a in Frameworks */,
@@ -2727,7 +2726,8 @@
 				8821BE8C8C71D13DDE9FE85D /* libsecurity-community.a in Frameworks */,
 				D913F2AA7CB08D84A5C8F5B2 /* libkernel.a in Frameworks */,
 				095D60104DD27C10A447030F /* libFoundation.a in Frameworks */,
-				5B4E0C16D16AF2FF5F1FDEBA /* libz.a in Frameworks */,				7AA48F443D9F37F4B977FC04 /* libGraphics.a in Frameworks */,
+				5B4E0C16D16AF2FF5F1FDEBA /* libz.a in Frameworks */,
+				7AA48F443D9F37F4B977FC04 /* libGraphics.a in Frameworks */,
 				3EAEE10F8A9B1CDDA0A4FAE8 /* libgif.a in Frameworks */,
 				2B9C0D7A04343D126B16A8C9 /* libpng.a in Frameworks */,
 				9B1BA8BE5C0583D74F7E4EDB /* libjpeg.a in Frameworks */,
@@ -3572,12 +3572,34 @@
 		39EE7792325CA4DA8A3482F2 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 100000;
 			};
 			buildConfigurationList = 4EADB58CB6DA50364FE14DB5 /* Build configuration list for PBXProject "engine" */;
 			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = en;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				en,
+				Base,
+				Dutch,
+				English,
+				French,
+				German,
+				Italian,
+				Japanese,
+				Spanish,
+				ar,
+				da,
+				fi,
+				he,
+				ko,
+				nb,
+				pt,
+				ru,
+				sv,
+				zh_CN,
+				zh_TW,
+			);
 			mainGroup = 7395376279994663985E9B8A;
 			projectDirPath = ../../../engine;
 			projectReferences = (
@@ -3654,12 +3676,12 @@
 					ProjectRef = 1E7BC92CE69E9C5341748152 /* libjpeg.xcodeproj */;
 				},
 				{
-					ProductGroup = 6001E0A328AE9C419C0D2A87 /* Products */;
-					ProjectRef = D6CF378F685264511FC9E299 /* libopenssl.xcodeproj */;
-				},
-				{
 					ProductGroup = E4D9B45E14EC69B1542AF05C /* Products */;
 					ProjectRef = C1C77A0A16F9A50C5F7A1E16 /* libopenssl.xcodeproj */;
+				},
+				{
+					ProductGroup = 6001E0A328AE9C419C0D2A87 /* Products */;
+					ProjectRef = D6CF378F685264511FC9E299 /* libopenssl.xcodeproj */;
 				},
 				{
 					ProductGroup = 53D8BF44E430E02708E592DC /* Products */;
@@ -5668,9 +5690,12 @@
 					../prebuilt/lib/mac,
 				);
 				OTHER_LDFLAGS = (
-					"-weak_framework AVFoundation",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib",
+					"-weak_framework",
+					AVFoundation,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib,
 					"-Wl,-platform_version",
 					"-Wl,macos",
 					"-Wl,11.0",
@@ -6045,9 +6070,12 @@
 					../prebuilt/lib/mac,
 				);
 				OTHER_LDFLAGS = (
-					"-weak_framework AVFoundation",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib",
+					"-weak_framework",
+					AVFoundation,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib,
 					"-Wl,-platform_version",
 					"-Wl,macos",
 					"-Wl,11.0",
@@ -6230,9 +6258,12 @@
 					../prebuilt/lib/mac,
 				);
 				OTHER_LDFLAGS = (
-					"-weak_framework AVFoundation",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib",
+					"-weak_framework",
+					AVFoundation,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib,
 					"-Wl,-platform_version",
 					"-Wl,macos",
 					"-Wl,11.0",
@@ -6638,9 +6669,12 @@
 					../prebuilt/lib/mac,
 				);
 				OTHER_LDFLAGS = (
-					"-weak_framework AVFoundation",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib",
+					"-weak_framework",
+					AVFoundation,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib,
 					"-Wl,-platform_version",
 					"-Wl,macos",
 					"-Wl,11.0",
@@ -6832,9 +6866,12 @@
 					../prebuilt/lib/mac,
 				);
 				OTHER_LDFLAGS = (
-					"-weak_framework AVFoundation",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib",
+					"-weak_framework",
+					AVFoundation,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib,
 					"-Wl,-platform_version",
 					"-Wl,macos",
 					"-Wl,11.0",
@@ -7201,9 +7238,12 @@
 					../prebuilt/lib/mac,
 				);
 				OTHER_LDFLAGS = (
-					"-weak_framework AVFoundation",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib",
+					"-weak_framework",
+					AVFoundation,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib,
 					"-Wl,-platform_version",
 					"-Wl,macos",
 					"-Wl,11.0",
@@ -7783,9 +7823,12 @@
 					../prebuilt/lib/mac,
 				);
 				OTHER_LDFLAGS = (
-					"-weak_framework AVFoundation",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib",
+					"-weak_framework",
+					AVFoundation,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib,
 					"-Wl,-platform_version",
 					"-Wl,macos",
 					"-Wl,11.0",
@@ -7982,9 +8025,12 @@
 					../prebuilt/lib/mac,
 				);
 				OTHER_LDFLAGS = (
-					"-weak_framework AVFoundation",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib",
+					"-weak_framework",
+					AVFoundation,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib,
 					"-Wl,-platform_version",
 					"-Wl,macos",
 					"-Wl,11.0",
@@ -8079,9 +8125,12 @@
 					../prebuilt/lib/mac,
 				);
 				OTHER_LDFLAGS = (
-					"-weak_framework AVFoundation",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib",
-					"-weak_library /Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib",
+					"-weak_framework",
+					AVFoundation,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib,
+					"-weak_library",
+					/Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib,
 					"-Wl,-platform_version",
 					"-Wl,macos",
 					"-Wl,11.0",
