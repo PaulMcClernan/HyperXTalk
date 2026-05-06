@@ -274,11 +274,24 @@ Boolean MCScreenDC::open()
 				BOOL t_dark = MCplatformIsDarkMode() ? TRUE : FALSE;
 				t_set_mode(1 /* AllowDark */);
 				t_allow_dark(invisiblehwnd, t_dark);
-				// Also apply DWM title-bar colour so the invisible window's chrome
-				// matches, consistent with MCWin32ApplyDarkModeChrome.
-				DWORD t_attr = t_dark;
-				DwmSetWindowAttribute(invisiblehwnd, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */,
-				                      &t_attr, sizeof(t_attr));
+				// Apply DWM title-bar attribute via GetProcAddress — the rest of
+				// the file also loads dwmapi.dll dynamically (no #include <dwmapi.h>).
+				typedef HRESULT (WINAPI *DwmSetWindowAttributeFn)(HWND, DWORD, LPCVOID, DWORD);
+				HMODULE t_dwm = GetModuleHandleA("dwmapi.dll");
+				if (t_dwm == NULL)
+					t_dwm = LoadLibraryA("dwmapi.dll");
+				if (t_dwm != NULL)
+				{
+					auto t_dwm_set = (DwmSetWindowAttributeFn)
+					    GetProcAddress(t_dwm, "DwmSetWindowAttribute");
+					if (t_dwm_set)
+					{
+						DWORD t_attr = t_dark;
+						t_dwm_set(invisiblehwnd,
+						          20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */,
+						          &t_attr, sizeof(t_attr));
+					}
+				}
 				t_flush();
 			}
 		}
