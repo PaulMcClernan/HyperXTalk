@@ -642,6 +642,8 @@ enum MCPlatformMenuItemProperty
 	kMCPlatformMenuItemPropertyEnabled,
 	kMCPlatformMenuItemPropertySubmenu,
 	kMCPlatformMenuItemPropertyHighlight,
+	// SF Symbol name for the menu item icon (macOS 11+; no-op on other platforms).
+	kMCPlatformMenuItemPropertyIcon,
 };
 
 enum MCPlatformMenuItemHighlight
