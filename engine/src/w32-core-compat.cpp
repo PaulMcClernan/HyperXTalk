@@ -122,6 +122,60 @@ public:
         /* [out] */ ISpellChecker **value) = 0;
 };
 
+// ── ITaskbarList3 COM interface (Windows 7+) ──────────────────────────────────
+//
+// Like ISpellChecker above, we define the interface inline so that
+// _WIN32_WINNT=0x0601 doesn't cause problems with version-guarded SDK headers.
+//
+// GUIDs from the published Windows SDK (all versions):
+//   CLSID_TaskbarList  {56FDF344-FD6D-11d0-958A-006097C9A090}
+//   ITaskbarList       {56FDF342-FD6D-11d0-958A-006097C9A090}
+//   ITaskbarList2      {602D4995-B13A-429b-A66E-1935E44F4317}
+//   ITaskbarList3      {EA1AFB91-9E28-4B86-90E9-9E9F8A5EEFAF}
+
+static const CLSID s_CLSID_TaskbarList =
+    {0x56fdf344, 0xfd6d, 0x11d0, {0x95, 0x8a, 0x00, 0x60, 0x97, 0xc9, 0xa0, 0x90}};
+
+typedef enum TBPFLAG
+{
+    TBPF_NOPROGRESS    = 0,
+    TBPF_INDETERMINATE = 0x1,
+    TBPF_NORMAL        = 0x2,
+    TBPF_ERROR         = 0x4,
+    TBPF_PAUSED        = 0x8,
+} TBPFLAG;
+
+// ITaskbarList — base interface; only HrInit() is needed.
+MIDL_INTERFACE("56FDF342-FD6D-11d0-958A-006097C9A090")
+ITaskbarList : public IUnknown
+{
+public:
+    virtual HRESULT STDMETHODCALLTYPE HrInit(void) = 0;
+    virtual HRESULT STDMETHODCALLTYPE AddTab(HWND hwnd) = 0;
+    virtual HRESULT STDMETHODCALLTYPE DeleteTab(HWND hwnd) = 0;
+    virtual HRESULT STDMETHODCALLTYPE ActivateTab(HWND hwnd) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetActiveAlt(HWND hwnd) = 0;
+};
+
+// ITaskbarList2 — declares MarkFullscreenWindow; must be in vtable.
+MIDL_INTERFACE("602D4995-B13A-429b-A66E-1935E44F4317")
+ITaskbarList2 : public ITaskbarList
+{
+public:
+    virtual HRESULT STDMETHODCALLTYPE MarkFullscreenWindow(HWND hwnd, BOOL fFullscreen) = 0;
+};
+
+// ITaskbarList3 — the two methods we actually call are SetProgressState [7]
+// and SetProgressValue [8] (0-indexed from IUnknown base).
+MIDL_INTERFACE("EA1AFB91-9E28-4B86-90E9-9E9F8A5EEFAF")
+ITaskbarList3 : public ITaskbarList2
+{
+public:
+    virtual HRESULT STDMETHODCALLTYPE SetProgressValue(HWND hwnd, ULONGLONG ullCompleted, ULONGLONG ullTotal) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetProgressState(HWND hwnd, TBPFLAG tbpFlags) = 0;
+    // Remaining methods not needed; vtable slots above are correct.
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // MCPlatform* compatability functions
 //   Implementation of MCPlatform* functions required for MCPlatformPlayer implementation.
@@ -250,6 +304,60 @@ void MCPlatformSpellCheckText(MCStringRef p_text, MCRange*& r_errors, uindex_t& 
 
     r_errors = t_errors;
     r_count  = t_count;
+}
+
+// ── Taskbar progress (ITaskbarList3) ─────────────────────────────────────────
+
+void MCPlatformSetTaskbarProgress(void *p_hwnd, double p_value)
+{
+    if (p_hwnd == nil)
+        return;
+
+    HWND t_hwnd = (HWND)p_hwnd;
+
+    // Lazy-init: create one ITaskbarList3 for the process lifetime.
+    static ITaskbarList3 *s_taskbar   = NULL;
+    static bool           s_init_done = false;
+
+    if (!s_init_done)
+    {
+        s_init_done = true;
+        ITaskbarList3 *t_tbl = NULL;
+        HRESULT t_hr = CoCreateInstance(s_CLSID_TaskbarList, NULL,
+                                        CLSCTX_INPROC_SERVER,
+                                        __uuidof(ITaskbarList3),
+                                        (void **)&t_tbl);
+        if (SUCCEEDED(t_hr) && t_tbl != NULL)
+        {
+            if (SUCCEEDED(t_tbl->HrInit()))
+                s_taskbar = t_tbl;
+            else
+                t_tbl->Release();
+        }
+    }
+
+    if (s_taskbar == NULL)
+        return;
+
+    if (p_value < 0.0)
+    {
+        // Indeterminate spinner.
+        s_taskbar->SetProgressState(t_hwnd, TBPF_INDETERMINATE);
+    }
+    else if (p_value == 0.0)
+    {
+        // Hide the progress bar.
+        s_taskbar->SetProgressState(t_hwnd, TBPF_NOPROGRESS);
+    }
+    else
+    {
+        // Normal fill — clamp to [0,1].
+        double t_clamped = p_value > 1.0 ? 1.0 : p_value;
+        s_taskbar->SetProgressState(t_hwnd, TBPF_NORMAL);
+        s_taskbar->SetProgressValue(t_hwnd,
+                                    (ULONGLONG)(t_clamped * 10000.0),
+                                    (ULONGLONG)10000);
+    }
 }
 
 void MCPlatformShareContent(MCPlatformWindowRef, MCPlatformShareType, MCValueRef, bool, MCRectangle, MCStringRef)
