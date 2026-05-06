@@ -82,6 +82,9 @@ static MCColor vgapalette[16] =
 		{0xFFFF, 0xFFFF, 0xFFFF},
     };
 
+// Forward declaration for MCplatformIsDarkMode, defined later in this file.
+extern "C" bool MCplatformIsDarkMode(void);
+
 void MCScreenDC::setstatus(MCStringRef status)
 { //No action
 }
@@ -245,6 +248,42 @@ Boolean MCScreenDC::open()
 	invisiblehwnd = CreateWindowA(MC_WIN_CLASS_NAME, "MCdummy",
 	                             WS_POPUP, 0, 0, 8, 8,
 	                             NULL, NULL, MChInst, NULL);
+
+	// Prime uxtheme dark-mode NOW — before MCNativeTheme::load() later calls
+	// OpenThemeData(invisiblehwnd, "Menu").  uxtheme only returns a dark HTHEME
+	// when BOTH SetPreferredAppMode(AllowDark) AND AllowDarkModeForWindow(hwnd)
+	// have been called first.  updatedesktop() handles this on WM_SETTINGCHANGE,
+	// but that message never arrives at cold startup, so we do it here inline.
+	// We call uxtheme ordinals directly to avoid forward-referencing the static
+	// helpers (s_ensure_uxtheme_dark etc.) that are defined later in this file.
+	{
+		typedef BOOL (WINAPI *AllowDarkModeForWindowFn)(HWND, BOOL);
+		typedef int  (WINAPI *SetPreferredAppModeFn)(int);
+		typedef void (WINAPI *FlushMenuThemesFn)(void);
+
+		HMODULE t_ux = GetModuleHandleA("uxtheme.dll");
+		if (t_ux == NULL)
+			t_ux = LoadLibraryA("uxtheme.dll");
+		if (t_ux != NULL)
+		{
+			auto t_set_mode   = (SetPreferredAppModeFn)    GetProcAddress(t_ux, MAKEINTRESOURCEA(135));
+			auto t_allow_dark = (AllowDarkModeForWindowFn) GetProcAddress(t_ux, MAKEINTRESOURCEA(133));
+			auto t_flush      = (FlushMenuThemesFn)        GetProcAddress(t_ux, MAKEINTRESOURCEA(136));
+			if (t_set_mode && t_allow_dark && t_flush)
+			{
+				BOOL t_dark = MCplatformIsDarkMode() ? TRUE : FALSE;
+				t_set_mode(1 /* AllowDark */);
+				t_allow_dark(invisiblehwnd, t_dark);
+				// Also apply DWM title-bar colour so the invisible window's chrome
+				// matches, consistent with MCWin32ApplyDarkModeChrome.
+				DWORD t_attr = t_dark;
+				DwmSetWindowAttribute(invisiblehwnd, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */,
+				                      &t_attr, sizeof(t_attr));
+				t_flush();
+			}
+		}
+	}
+
 	mutex = CreateMutexA(NULL, False, NULL);
 
 	MCblinkrate = GetCaretBlinkTime();
