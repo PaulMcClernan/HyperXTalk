@@ -89,8 +89,33 @@ jobs:
             libx11-dev libxext-dev libxrender-dev \
             libxinerama-dev libxrandr-dev libxcb1-dev libxv-dev libdbus-1-dev libcups2-dev \
             libgif-dev libpcre3-dev zlib1g-dev \
+            libvlc-dev \
             default-jdk \
             fuse libfuse2
+
+      - name: Prepare cairo-features.h for Linux
+        run: |
+          # The committed cairo-features.h was generated for macOS (Quartz backend).
+          # Overwrite it with the Linux/FreeType backend feature set.
+          cat > thirdparty/libcairo/src/cairo-features.h << 'EOF'
+          /* Hand-crafted for Linux / GCC x86-64 — replaces the macOS meson output. */
+          #pragma once
+          #define CAIRO_FEATURES_H
+          #define CAIRO_HAS_FC_FONT 1
+          #define CAIRO_HAS_FT_FONT 1
+          #define CAIRO_HAS_IMAGE_SURFACE 1
+          #define CAIRO_HAS_MIME_SURFACE 1
+          #define CAIRO_HAS_OBSERVER_SURFACE 1
+          #define CAIRO_HAS_PDF_SURFACE 1
+          #define CAIRO_HAS_PNG_FUNCTIONS 1
+          #define CAIRO_HAS_PS_SURFACE 1
+          #define CAIRO_HAS_RECORDING_SURFACE 1
+          #define CAIRO_HAS_SCRIPT_SURFACE 1
+          #define CAIRO_HAS_SVG_SURFACE 1
+          #define CAIRO_HAS_USER_FONT 1
+          #define CAIRO_HAS_XLIB_SURFACE 1
+          #define CAIRO_HAS_XLIB_XRENDER_SURFACE 1
+          EOF
 
       - name: Configure (GYP → Makefiles)
         run: ./config.sh --platform linux-x86_64

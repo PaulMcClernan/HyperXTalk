@@ -3581,6 +3581,7 @@ on revIDEUngroup pGroup
    end if
    revIDESelectObjects pGroup
    ungroup
+   revIDEMessageSend "ideControlDeleted", pGroup
 end revIDEUngroup
 
 /*

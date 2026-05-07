@@ -3343,8 +3343,14 @@ command revSBCopyVLCToStandalone pPlatform, pStandaloneDir, pEnginePath, pCopyPl
    else if pPlatform begins with "Windows" then
       put "C:\Program Files\VideoLAN\VLC" into tVLCWin
       if there is not a folder tVLCWin then
-         revStandaloneProgress "VLC not found at " & tVLCWin & " - skipping VLC bundle."
-         exit revSBCopyVLCToStandalone
+         -- Not on Windows (e.g. building from Mac): fall back to the pre-staged
+         -- VLC runtime in ide/Runtime/Windows/x86-64/vlc/
+         put revEnvironmentRuntimePath() & "/Windows/x86-64/vlc" into tVLCWin
+         if there is not a folder tVLCWin then
+            revStandaloneProgress "VLC not found locally or in Runtime - skipping VLC bundle."
+            exit revSBCopyVLCToStandalone
+         end if
+         revStandaloneProgress "Using pre-staged VLC runtime from " & tVLCWin
       end if
       -- Normalise the standalone dir to backslashes for cmd.exe/xcopy.
       -- LiveCode paths use forward slashes on all platforms; xcopy needs backslashes.

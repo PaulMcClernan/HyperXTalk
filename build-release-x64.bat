@@ -912,6 +912,84 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 :vlc_done
+
+:: Stage VLC into ide\Runtime\Windows\x86-64\vlc\ so Mac can bundle it
+:: when building Windows standalones without a local VLC install.
+:: Source is %OUTDIR% (already has libvlc.dll copied there above) so this
+:: works regardless of the VLC install path.
+if not exist "%OUTDIR%\libvlc.dll" goto vlc_stage_skip
+if not exist "%~dp0ide\Runtime\Windows\x86-64\vlc"         mkdir "%~dp0ide\Runtime\Windows\x86-64\vlc"
+if not exist "%~dp0ide\Runtime\Windows\x86-64\vlc\plugins" mkdir "%~dp0ide\Runtime\Windows\x86-64\vlc\plugins"
+copy /Y "%OUTDIR%\libvlc.dll"     "%~dp0ide\Runtime\Windows\x86-64\vlc\libvlc.dll"     > nul
+copy /Y "%OUTDIR%\libvlccore.dll" "%~dp0ide\Runtime\Windows\x86-64\vlc\libvlccore.dll" > nul
+for %%D in (libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll) do (
+    if exist "%OUTDIR%\%%D" copy /Y "%OUTDIR%\%%D" "%~dp0ide\Runtime\Windows\x86-64\vlc\%%D" > nul
+)
+if exist "%OUTDIR%\vlc-plugins\plugins" (
+    xcopy /E /I /Y /Q "%OUTDIR%\vlc-plugins\plugins" "%~dp0ide\Runtime\Windows\x86-64\vlc\plugins" > nul
+)
+echo VLC runtime staged to ide\Runtime\Windows\x86-64\vlc\
+echo VLC runtime staged to ide\Runtime\Windows\x86-64\vlc\ >> "%LOGFILE%"
+:vlc_stage_skip
+
+:: ----------------------------------------------------------
+:: Stage Windows Runtime files into ide\Runtime\Windows\x86-64\
+:: so that macOS (and any other platform) can build Windows standalones
+:: without needing a separate Windows machine.
+:: These files are tracked in git via the .gitignore exemption
+:: !ide/Runtime/Windows/**/**.dll
+:: ----------------------------------------------------------
+echo.
+echo Staging Windows Runtime files for cross-platform standalone building ...
+
+set "RT=ide\Runtime\Windows\x86-64"
+if not exist "%~dp0%RT%\Support"                  mkdir "%~dp0%RT%\Support"
+if not exist "%~dp0%RT%\Externals\Database Drivers" mkdir "%~dp0%RT%\Externals\Database Drivers"
+
+:: Engine (already copied above, but re-copy here for completeness)
+copy /Y "%STANDALONE_EXE%" "%~dp0%RT%\Standalone" > nul 2>nul
+
+:: Support DLLs
+for %%F in (revsecurity.dll revpdfprinter.dll) do (
+    if exist "%OUTDIR%\%%F" (
+        copy /Y "%OUTDIR%\%%F" "%~dp0%RT%\Support\%%F" > nul
+        echo   %%F staged to %RT%\Support\
+    ) else (
+        echo   WARNING: %%F not found in %OUTDIR% -- skipping.
+    )
+)
+
+:: Externals DLLs
+for %%F in (revxml.dll revdb.dll revzip.dll revspeech.dll revbrowser.dll) do (
+    if exist "%OUTDIR%\%%F" (
+        copy /Y "%OUTDIR%\%%F" "%~dp0%RT%\Externals\%%F" > nul
+        echo   %%F staged to %RT%\Externals\
+    ) else (
+        echo   WARNING: %%F not found in %OUTDIR% -- skipping.
+    )
+)
+
+:: Database driver DLLs
+for %%F in (dbmysql.dll dbodbc.dll dbpostgresql.dll dbsqlite.dll) do (
+    if exist "%OUTDIR%\%%F" (
+        copy /Y "%OUTDIR%\%%F" "%~dp0%RT%\Externals\Database Drivers\%%F" > nul
+        echo   %%F staged to %RT%\Externals\Database Drivers\
+    ) else (
+        echo   WARNING: %%F not found in %OUTDIR% -- skipping.
+    )
+)
+
+:: libmysql.dll and OpenSSL DLLs (MySQL runtime deps)
+for %%F in (libmysql.dll libssl-3-x64.dll libcrypto-3-x64.dll) do (
+    if exist "%OUTDIR%\%%F" (
+        copy /Y "%OUTDIR%\%%F" "%~dp0%RT%\Externals\Database Drivers\%%F" > nul
+        echo   %%F staged to %RT%\Externals\Database Drivers\
+    )
+)
+
+echo Runtime staging complete.
+echo Runtime staging complete. >> "%LOGFILE%"
+
 echo.
 echo Build complete.
 echo Build complete. >> "%LOGFILE%"

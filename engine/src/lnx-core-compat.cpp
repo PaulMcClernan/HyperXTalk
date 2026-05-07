@@ -58,6 +58,8 @@ bool MCPlatformWaitForEvent(double duration, bool blocking)
     return MCscreen->wait(duration, t_dispatch, false);
 }
 
+#ifdef FEATURE_PLATFORM_PLAYER
+
 static MCPlayer *find_player(MCPlatformPlayerRef p_player)
 {
     for (MCPlayerHandle t_player = MCplayers; t_player.IsValid();
@@ -103,3 +105,23 @@ void MCPlatformCallbackSendPlayerFinished(MCPlatformPlayerRef p_player)
     t_player->layer_redrawall();
     t_player->moviefinished();
 }
+
+#else // !FEATURE_PLATFORM_PLAYER
+
+void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef /*p_player*/)
+{
+}
+
+void MCPlatformCallbackSendPlayerMarkerChanged(MCPlatformPlayerRef /*p_player*/, MCPlatformPlayerDuration /*p_time*/)
+{
+}
+
+void MCPlatformCallbackSendPlayerCurrentTimeChanged(MCPlatformPlayerRef /*p_player*/)
+{
+}
+
+void MCPlatformCallbackSendPlayerFinished(MCPlatformPlayerRef /*p_player*/)
+{
+}
+
+#endif // FEATURE_PLATFORM_PLAYER
