@@ -30,19 +30,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //     so that MCPlatformCancelNotification can remove it by ID.
 //
 
-#include "prefix.h"
-#include "mcstring.h"
-#include "notification.h"
-
-// ── C++ standard library (must precede WRL headers on SDK 26100) ──────────────
-// wrl/implements.h in Windows SDK 10.0.26100.0 uses 'string' as a template
-// parameter name; including <string> first ensures the identifier is in scope
-// and not misinterpreted by the compiler.
+// ── WRL / WinRT and C++ standard headers MUST come first ─────────────────────
+// Windows SDK 10.0.26100.0 wrl/implements.h uses 'string' as a template
+// parameter identifier.  Engine headers pulled in by prefix.h (via w32prefix.h
+// → windows.h and sysdefs.h macros) can corrupt the preprocessor environment
+// in a way that makes MSVC emit C2059 "syntax error: 'string'" inside WRL.
+// Including WRL before any engine header keeps WRL in a clean macro environment.
 #include <string>
 #include <mutex>
 #include <unordered_map>
 
-// ── WRL / WinRT headers ───────────────────────────────────────────────────────
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -56,6 +53,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <shlobj.h>
 // Link WinRT bootstrap library (RoInitialize, RoGetActivationFactory, etc.)
 #pragma comment(lib, "runtimeobject.lib")
+
+// ── Engine headers (after WRL to avoid macro pollution) ───────────────────────
+#include "prefix.h"
+#include "mcstring.h"
+#include "notification.h"
 
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
