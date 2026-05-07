@@ -34,6 +34,8 @@ util/perfect/perfect.linux-*
 *.com
 *.class
 *.dll
+# Allow the Windows Runtime DLLs needed for building standalones on Mac
+!ide/Runtime/Windows/**/**.dll
 *.exe
 *.o
 *.so
@@ -125,7 +127,7 @@ prebuilt/fetched
 # Windows build artefacts
 *.idb
 *.pdb
-ide/Runtime/Windows/x86-64/Standalone
+# ide/Runtime/Windows/x86-64/Standalone is now tracked (needed for building Windows standalones on Mac)
 
 # Local secrets — never commit
 .env.local
