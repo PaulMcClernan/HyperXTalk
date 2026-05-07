@@ -911,6 +911,22 @@ if %ERRORLEVEL% NEQ 0 (
     echo   VLC plugins copied to vlc-plugins\plugins\.
 )
 
+:: Stage VLC into ide\Runtime\Windows\x86-64\vlc\ so Mac can bundle it
+:: when building Windows standalones without a local VLC install.
+if exist "%VLC_SRC%\libvlc.dll" (
+    set "VLC_RT=%~dp0ide\Runtime\Windows\x86-64\vlc"
+    if not exist "%VLC_RT%"          mkdir "%VLC_RT%"
+    if not exist "%VLC_RT%\plugins"  mkdir "%VLC_RT%\plugins"
+    copy /Y "%VLC_SRC%\libvlc.dll"     "%VLC_RT%\libvlc.dll"     > nul
+    copy /Y "%VLC_SRC%\libvlccore.dll" "%VLC_RT%\libvlccore.dll" > nul
+    for %%D in (libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll) do (
+        if exist "%VLC_SRC%\%%D" copy /Y "%VLC_SRC%\%%D" "%VLC_RT%\%%D" > nul
+    )
+    xcopy /E /I /Y /Q "%VLC_SRC%\plugins" "%VLC_RT%\plugins" > nul
+    echo VLC runtime staged to ide\Runtime\Windows\x86-64\vlc\
+    echo VLC runtime staged to ide\Runtime\Windows\x86-64\vlc\ >> "%LOGFILE%"
+)
+
 :vlc_done
 
 :: ----------------------------------------------------------
