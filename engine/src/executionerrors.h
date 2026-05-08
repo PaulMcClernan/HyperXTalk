@@ -2822,17 +2822,4 @@ enum Exec_errors
     // {EE-0922} retrieveCredential: error in service expression
     EE_RETRIEVECREDENTIAL_BADSERVICE,
 
-    // {EE-0923} retrieveCredential: error in account expression
-    EE_RETRIEVECREDENTIAL_BADACCOUNT,
-
-    // {EE-0924} deleteCredential: error in service expression
-    EE_DELETECREDENTIAL_BADSERVICE,
-
-    // {EE-0925} deleteCredential: error in account expression
-    EE_DELETECREDENTIAL_BADACCOUNT,
-
-};
-
-extern const char *MCexecutionerrors;
-
-#endif
+    // {EE-0923} retrieveCredential: e

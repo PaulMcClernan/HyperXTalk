@@ -1301,7 +1301,36 @@ void MCInterfaceExecBringApplicationToFront(MCExecContext& ctxt)
     extern void MCMacActivateApplication(void);
     MCMacActivateApplication();
 #elif defined(_WINDOWS_DESKTOP)
-    SetForegroundWindow(((MCScreenDC *)MCscreen)->getinvisiblewindow());
+    // Bring the default stack's window to the foreground, restoring it first
+    // if it is minimised.  SetForegroundWindow on the invisible helper window
+    // (the old code) has no visible effect — we need the real stack window.
+    if (MCdefaultstackptr)
+    {
+        // getrealwindow() returns MCSysWindowHandle; cast to HWND for Win32 API.
+        HWND t_hwnd = (HWND)MCdefaultstackptr->getrealwindow();
+        {
+            if (t_hwnd != NULL)
+            {
+                if (IsIconic(t_hwnd))
+                    ShowWindow(t_hwnd, SW_RESTORE);
+
+                // SetForegroundWindow fails silently when our process doesn't own
+                // the foreground lock.  Temporarily attaching our thread's input
+                // to the current foreground thread grants us that permission.
+                HWND  t_fg     = GetForegroundWindow();
+                DWORD t_fg_tid = t_fg ? GetWindowThreadProcessId(t_fg, nullptr) : 0;
+                DWORD t_my_tid = GetCurrentThreadId();
+                if (t_fg_tid && t_fg_tid != t_my_tid)
+                    AttachThreadInput(t_my_tid, t_fg_tid, TRUE);
+
+                SetForegroundWindow(t_hwnd);
+                BringWindowToTop(t_hwnd);
+
+                if (t_fg_tid && t_fg_tid != t_my_tid)
+                    AttachThreadInput(t_my_tid, t_fg_tid, FALSE);
+            }
+        }
+    }
 #elif defined(_LINUX_DESKTOP)
     extern void MCLinuxActivateApplication(void);
     MCLinuxActivateApplication();

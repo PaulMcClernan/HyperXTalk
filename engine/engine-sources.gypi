@@ -1395,22 +1395,4 @@
 			],
 			[
 				'mobile != 0',
-				{
-					'sources/':
-					[
-						['exclude', '^src/dsk.*\\.(cpp|mm)$'],
-					],
-				},
-			],
-			[
-				'mobile == 0',
-				{
-					'sources!':
-					[
-						'src/exec-sensor.cpp',
-					],
-				},
-			],
-		],
-	},
-}
+			

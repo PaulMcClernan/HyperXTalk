@@ -2380,10 +2380,4 @@ enum MCExecResultMode
 {
     kMCExecResultModeReturn,
     kMCExecResultModeReturnValue,
-    kMCExecResultModeReturnError,
-};
-
-#include "parseerrors.h"
-#include "executionerrors.h"
-
-#endif
+    kMCEx

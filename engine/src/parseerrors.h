@@ -1829,11 +1829,4 @@ enum Parse_errors
     // {PE-0588} retrieveCredential: bad parameter expression
     PE_RETRIEVECREDENTIAL_BADPARAM,
 
-    // {PE-0589} deleteCredential: bad parameter expression
-    PE_DELETECREDENTIAL_BADPARAM,
-};
-
-extern const char *MCparsingerrors;
-
-#endif
-
+    // {PE-0589} deleteCredential: 

@@ -6906,22 +6906,4 @@
 			buildConfigurations = (
 				0B8AEE22222884510E9CCAD9 /* Debug */,
 				459E4CB01653EC81FA827D88 /* Fast */,
-				04A2E539BB9503D85D3EC950 /* Release */,
-			);
-			defaultConfigurationIsVisible = 1;
-			defaultConfigurationName = Debug;
-		};
-		F31C8A88B7FC4BD1EB460912 /* Build configuration list for PBXNativeTarget "kernel-server (host)" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				8EA9D06EA288A53D0A0234B8 /* Debug */,
-				74471765A6741B71D27F197A /* Fast */,
-				4D62F964B16CFC95FA9F6FB5 /* Release */,
-			);
-			defaultConfigurationIsVisible = 1;
-			defaultConfigurationName = Debug;
-		};
-/* End XCConfigurationList section */
-	};
-	rootObject = D2C9DD5866667E1D05FDF06F /* Project object */;
-}
+				04A2E539BB9503D85D3E
