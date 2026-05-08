@@ -746,6 +746,8 @@
     <ClCompile Include="..\..\..\engine\src\dskw32.cpp"/>
     <ClCompile Include="..\..\..\engine\src\exec.cpp"/>
     <ClCompile Include="..\..\..\engine\src\exec-array.cpp"/>
+    <ClCompile Include="..\..\..\engine\src\exec-battery.cpp"/>
+    <ClCompile Include="..\..\..\engine\src\w32-battery.cpp"/>
     <ClCompile Include="..\..\..\engine\src\exec-datetime.cpp"/>
     <ClCompile Include="..\..\..\engine\src\exec-debugging.cpp"/>
     <ClCompile Include="..\..\..\engine\src\exec-dialog.cpp"/>
