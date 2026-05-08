@@ -30,3 +30,8 @@ void MCPlatformSetTaskbarProgress(void * /*p_hwnd*/, double /*p_value*/)
 void MCPlatformSetJumpList(MCStringRef /*p_tasks*/, MCStringRef /*p_category*/)
 {
 }
+
+// bringApplicationToFront is a no-op in the server engine (no GUI).
+void MCMacActivateApplication(void)
+{
+}
