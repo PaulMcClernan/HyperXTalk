@@ -374,6 +374,8 @@ MCExpression *MCN_new_function(int2 which)
 		t_new_function = new MCBase64Encode; break;
 	case F_BASE_CONVERT:
 		t_new_function = new MCBaseConvert; break;
+	case F_BATTERY_LEVEL:
+		t_new_function = new MCBatteryLevel; break;
     // AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
     case F_BIDI_DIRECTION:
         t_new_function = new MCBidiDirection; break;
@@ -709,6 +711,8 @@ MCExpression *MCN_new_function(int2 which)
 	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'populationVariance'
 	case F_POP_VARIANCE:
 		t_new_function = new MCPopulationVariance; break;
+	case F_POWER_SOURCE:
+		t_new_function = new MCPowerSource; break;
 	case F_PROCESSOR:
 		t_new_function = new MCProcessor; break;
 	case F_PROCESS_ID:
