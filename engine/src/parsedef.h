@@ -2043,6 +2043,7 @@ enum Statements {
 	// MW-2013-11-14: [[ AssertCmd ]] 'assert' command tag.
 	S_ASSERT,
     S_BEEP,
+    S_BRING_APPLICATION_TO_FRONT,
     S_BREAK,
     S_BREAKPOINT,
     S_CALL,

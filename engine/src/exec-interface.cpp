@@ -64,6 +64,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 
 #include "exec-interface.h"
+
+#if defined(_WINDOWS_DESKTOP)
+#include "w32dc.h"
+#endif
 #include "graphics_util.h"
 #include "mcerror.h"
 
@@ -1289,6 +1293,17 @@ void MCInterfaceExecBeep(MCExecContext& ctxt, integer_t p_count)
 			}
 		}
 	}
+}
+
+void MCInterfaceExecBringApplicationToFront(MCExecContext& ctxt)
+{
+#if defined(_MACOSX)
+    extern void MCMacActivateApplication(void);
+    MCMacActivateApplication();
+#elif defined(_WINDOWS)
+    SetForegroundWindow(((MCScreenDC *)MCscreen)->getinvisiblewindow());
+#endif
+    // Linux: no reliable cross-toolkit foreground mechanism; silently succeed.
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -167,6 +167,11 @@ void MCBeep::exec_ctxt(MCExecContext& ctxt)
 	MCInterfaceExecBeep(ctxt, t_count);
 }
 
+void MCBringApplicationToFront::exec_ctxt(MCExecContext& ctxt)
+{
+    MCInterfaceExecBringApplicationToFront(ctxt);
+}
+
 void MCBreakPoint::exec_ctxt(MCExecContext& ctxt)
 {
     MCDebuggingExecBreakpoint(ctxt, line, pos);

@@ -305,6 +305,7 @@ const LT command_table[] =
         {"ask", TT_STATEMENT, S_ASK},
 		{"assert", TT_STATEMENT, S_ASSERT},
         {"beep", TT_STATEMENT, S_BEEP},
+        {"bringApplicationToFront", TT_STATEMENT, S_BRING_APPLICATION_TO_FRONT},
         {"break", TT_STATEMENT, S_BREAK},
         {"breakpoint", TT_STATEMENT, S_BREAKPOINT},
         {"call", TT_STATEMENT, S_CALL},

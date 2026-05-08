@@ -1,0 +1,44 @@
+Name: bringApplicationToFront
+
+Type: command
+
+Syntax: bringApplicationToFront
+
+Summary:
+Brings the HyperXTalk application to the front of all other windows.
+
+Introduced: 1.0
+
+OS: mac, windows, linux
+
+Platforms: desktop
+
+Example:
+bringApplicationToFront
+
+Description:
+Use the <bringApplicationToFront> command to make the HyperXTalk application
+the frontmost application, raising all of its windows above those of other
+running applications and giving it keyboard focus.
+
+This is particularly useful inside global hotkey handlers that are triggered
+while another application is in the foreground. Because hotkey callbacks can
+fire when HyperXTalk is in the background, a common pattern is to call
+<bringApplicationToFront> at the start of the handler so that any subsequent
+user interaction (such as a dialog or field update) is immediately visible.
+
+>*Note:* On Linux there is no reliable cross-toolkit mechanism for a
+> background application to raise itself. The <bringApplicationToFront>
+> command silently succeeds on Linux without necessarily changing the
+> window order, depending on the window manager's policy.
+
+Example:
+on hotkeyFired
+    bringApplicationToFront
+    answer "Hotkey was pressed!"
+end hotkeyFired
+
+References: registerHotkey (command)
+
+Tags: ui
+
