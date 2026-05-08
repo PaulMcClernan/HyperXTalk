@@ -4472,4 +4472,21 @@ template<> struct MCExecValueTraits<float>
 void MCBatteryEvalBatteryLevel(MCExecContext& ctxt, integer_t& r_level);
 void MCBatteryEvalPowerSource(MCExecContext& ctxt, MCStringRef& r_source);
 
+////////////////////////////////////////////////////////////////////////////////
+// Credential storage
+
+void MCCredentialsEvalStoreCredential(MCExecContext& ctxt,
+                                      MCStringRef p_service,
+                                      MCStringRef p_account,
+                                      MCStringRef p_secret,
+                                      bool& r_result);
+void MCCredentialsEvalRetrieveCredential(MCExecContext& ctxt,
+                                         MCStringRef p_service,
+                                         MCStringRef p_account,
+                                         MCStringRef& r_secret);
+void MCCredentialsEvalDeleteCredential(MCExecContext& ctxt,
+                                       MCStringRef p_service,
+                                       MCStringRef p_account,
+                                       bool& r_result);
+
 #endif

@@ -1822,6 +1822,15 @@ enum Parse_errors
 
     // {PE-0586} iff: requires exactly 3 parameters
     PE_IFF_BADPARAM,
+
+    // {PE-0587} storeCredential: bad parameter expression
+    PE_STORECREDENTIAL_BADPARAM,
+
+    // {PE-0588} retrieveCredential: bad parameter expression
+    PE_RETRIEVECREDENTIAL_BADPARAM,
+
+    // {PE-0589} deleteCredential: bad parameter expression
+    PE_DELETECREDENTIAL_BADPARAM,
 };
 
 extern const char *MCparsingerrors;

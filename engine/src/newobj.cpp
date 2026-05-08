@@ -451,6 +451,8 @@ MCExpression *MCN_new_function(int2 which)
 		t_new_function = new MCDateFormat; break;
 	case F_DECOMPRESS:
 		t_new_function = new MCDecompress; break;
+	case F_DELETE_CREDENTIAL:
+		t_new_function = new MCDeleteCredential; break;
 	case F_DELETE_REGISTRY:
 		t_new_function = new MCDeleteRegistry; break;
 	case F_DELETE_RESOURCE:
@@ -737,6 +739,8 @@ MCExpression *MCN_new_function(int2 which)
 		t_new_function = new MCReplaceText; break;
 	case F_RESULT:
 		t_new_function = new MCTheResult; break;
+	case F_RETRIEVE_CREDENTIAL:
+		t_new_function = new MCRetrieveCredential; break;
 	case F_ROUND:
 		t_new_function = new MCRound; break;
 	case F_SCREEN_COLORS:
@@ -804,6 +808,8 @@ MCExpression *MCN_new_function(int2 which)
 		t_new_function = new MCSqrt; break;
 	case F_STACKS:
 		t_new_function = new MCStacks; break;
+	case F_STORE_CREDENTIAL:
+		t_new_function = new MCStoreCredential; break;
 	case F_STACK_SPACE:
 		t_new_function = new MCStackSpace; break;
 	case F_STAT_ROUND:

@@ -2808,7 +2808,28 @@ enum Exec_errors
     EE_IFF_BADCONDITION,
 
     // {EE-0918} iff: error evaluating result expression
-    EE_IFF_BADRESULT
+    EE_IFF_BADRESULT,
+
+    // {EE-0919} storeCredential: error in service expression
+    EE_STORECREDENTIAL_BADSERVICE,
+
+    // {EE-0920} storeCredential: error in account expression
+    EE_STORECREDENTIAL_BADACCOUNT,
+
+    // {EE-0921} storeCredential: error in secret expression
+    EE_STORECREDENTIAL_BADSECRET,
+
+    // {EE-0922} retrieveCredential: error in service expression
+    EE_RETRIEVECREDENTIAL_BADSERVICE,
+
+    // {EE-0923} retrieveCredential: error in account expression
+    EE_RETRIEVECREDENTIAL_BADACCOUNT,
+
+    // {EE-0924} deleteCredential: error in service expression
+    EE_DELETECREDENTIAL_BADSERVICE,
+
+    // {EE-0925} deleteCredential: error in account expression
+    EE_DELETECREDENTIAL_BADACCOUNT,
 
 };
 
