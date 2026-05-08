@@ -2220,4 +2220,8 @@ private:
 	MCExpression *m_sock_name;
 	bool secureverify : 1;
 	
-	// MM-2014-06-13: [[ Bug 
+	// MM-2014-06-13: [[ Bug 12567 ]] Added new host name variant for use with verification.
+	MCExpression *m_verify_host_name;
+};
+
+#endif

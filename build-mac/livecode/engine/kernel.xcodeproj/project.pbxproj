@@ -3406,4 +3406,10 @@
 				582E751B110425D7F4E7E000 /* Fast */,
 				3421935A68C218B16217082C /* Release */,
 			);
-			defaultConfigurationIsVisible = 1;
+			defaultConfigurationIsVisible = 1;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = CB85536D9A582B9D5E4A858C /* Project object */;
+}

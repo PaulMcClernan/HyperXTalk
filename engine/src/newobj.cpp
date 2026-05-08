@@ -977,4 +977,18 @@ MCExpression *MCN_new_operator(int2 which)
 	case O_POW:
 		return new MCPow;
 	case O_THERE:
-		
+		return new MCThere;
+	case O_TIMES:
+		return new MCTimes;
+	case O_XOR_BITS:
+		return new MCXorBits;
+	case O_BEGINS_WITH:
+		return new MCBeginsWith;
+	case O_ENDS_WITH:
+		return new MCEndsWith;
+	case O_MATCHES:
+		return new MCMatches;
+	default:
+		return new MCExpression;
+	}
+}

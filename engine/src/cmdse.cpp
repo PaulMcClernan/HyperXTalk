@@ -1654,4 +1654,8 @@ Parse_stat MCType::parse(MCScriptPoint &sp)
 void MCType::exec_ctxt(MCExecContext &ctxt)
 {
     MCAutoStringRef t_typing;
-    if (!ctxt . EvalExprAsStri
+    if (!ctxt . EvalExprAsStringRef(message, EE_TYPE_BADSTRINGEXP, &t_typing))
+        return;
+
+    MCInterfaceExecType(ctxt, *t_typing, mstate);
+}

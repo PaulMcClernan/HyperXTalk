@@ -2403,4 +2403,33 @@ public:
 	}
 	
 	virtual ~MCUuidFunc(void);
-	virtua
+	virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
+};
+
+// MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+class MCMeasureText: public MCFunction
+{
+    MCChunk *m_object;
+    MCExpression *m_text;
+    MCExpression *m_mode;
+    bool m_is_unicode;
+    
+public:
+    MCMeasureText(bool p_is_unicode)
+    {
+        m_object = nil;
+        m_text = nil;
+        m_mode = nil;
+        m_is_unicode = p_is_unicode;
+    }
+    
+    virtual ~MCMeasureText(void);
+	virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
+};
+
+#endif
+
+
+
