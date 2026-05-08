@@ -28,6 +28,7 @@ Software Foundation. */
 #define UNICODE
 #include <windows.h>
 #include <wincred.h>
+#include <string>
 
 #pragma comment(lib, "advapi32.lib")
 
