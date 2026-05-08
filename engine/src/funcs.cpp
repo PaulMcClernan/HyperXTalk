@@ -158,6 +158,118 @@ void MCArrayEncode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
         r_value . type = kMCExecValueTypeDataRef;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// deleteCredential(service, account)
+
+MCDeleteCredential::~MCDeleteCredential()
+{
+    delete service;
+    delete account;
+}
+
+Parse_stat MCDeleteCredential::parse(MCScriptPoint &sp, Boolean the)
+{
+    if (get2params(sp, &service, &account) != PS_NORMAL)
+    {
+        MCperror->add(PE_DELETECREDENTIAL_BADPARAM, sp);
+        return PS_ERROR;
+    }
+    return PS_NORMAL;
+}
+
+void MCDeleteCredential::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+{
+    MCAutoStringRef t_service;
+    if (!ctxt.EvalExprAsStringRef(service, EE_DELETECREDENTIAL_BADSERVICE,
+                                  &t_service))
+        return;
+    MCAutoStringRef t_account;
+    if (!ctxt.EvalExprAsStringRef(account, EE_DELETECREDENTIAL_BADACCOUNT,
+                                  &t_account))
+        return;
+
+    MCCredentialsEvalDeleteCredential(ctxt, *t_service, *t_account,
+                                      r_value.bool_value);
+    r_value.type = kMCExecValueTypeBool;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// retrieveCredential(service, account)
+
+MCRetrieveCredential::~MCRetrieveCredential()
+{
+    delete service;
+    delete account;
+}
+
+Parse_stat MCRetrieveCredential::parse(MCScriptPoint &sp, Boolean the)
+{
+    if (get2params(sp, &service, &account) != PS_NORMAL)
+    {
+        MCperror->add(PE_RETRIEVECREDENTIAL_BADPARAM, sp);
+        return PS_ERROR;
+    }
+    return PS_NORMAL;
+}
+
+void MCRetrieveCredential::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+{
+    MCAutoStringRef t_service;
+    if (!ctxt.EvalExprAsStringRef(service, EE_RETRIEVECREDENTIAL_BADSERVICE,
+                                  &t_service))
+        return;
+    MCAutoStringRef t_account;
+    if (!ctxt.EvalExprAsStringRef(account, EE_RETRIEVECREDENTIAL_BADACCOUNT,
+                                  &t_account))
+        return;
+
+    MCCredentialsEvalRetrieveCredential(ctxt, *t_service, *t_account,
+                                        r_value.stringref_value);
+    r_value.type = kMCExecValueTypeStringRef;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// storeCredential(service, account, secret)
+
+MCStoreCredential::~MCStoreCredential()
+{
+    delete service;
+    delete account;
+    delete secret;
+}
+
+Parse_stat MCStoreCredential::parse(MCScriptPoint &sp, Boolean the)
+{
+    if (get3params(sp, &service, &account, &secret) != PS_NORMAL || secret == NULL)
+    {
+        MCperror->add(PE_STORECREDENTIAL_BADPARAM, sp);
+        return PS_ERROR;
+    }
+    return PS_NORMAL;
+}
+
+void MCStoreCredential::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+{
+    MCAutoStringRef t_service;
+    if (!ctxt.EvalExprAsStringRef(service, EE_STORECREDENTIAL_BADSERVICE,
+                                  &t_service))
+        return;
+    MCAutoStringRef t_account;
+    if (!ctxt.EvalExprAsStringRef(account, EE_STORECREDENTIAL_BADACCOUNT,
+                                  &t_account))
+        return;
+    MCAutoStringRef t_secret;
+    if (!ctxt.EvalExprAsStringRef(secret, EE_STORECREDENTIAL_BADSECRET,
+                                  &t_secret))
+        return;
+
+    MCCredentialsEvalStoreCredential(ctxt, *t_service, *t_account, *t_secret,
+                                     r_value.bool_value);
+    r_value.type = kMCExecValueTypeBool;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCBaseConvert::~MCBaseConvert()
 {
 	delete source;

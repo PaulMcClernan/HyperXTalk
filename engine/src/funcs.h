@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 #include "exec-battery.h"
+#include "exec-credentials.h"
 #include "param.h"
 #include "scriptpt.h"
 
@@ -1333,6 +1334,18 @@ class MCQTVersion : public MCConstantFunctionCtxt<MCStringRef, MCMultimediaEvalQ
 public:
 };
 
+// retrieveCredential(service, account) — returns a stored secret string.
+class MCRetrieveCredential : public MCFunction
+{
+    MCExpression *service;
+    MCExpression *account;
+public:
+    MCRetrieveCredential() : service(NULL), account(NULL) {}
+    virtual ~MCRetrieveCredential();
+    virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+    virtual void eval_ctxt(MCExecContext &, MCExecValue &);
+};
+
 class MCReplaceText : public MCFunction
 {
 	MCExpression *source;
@@ -1504,6 +1517,19 @@ public:
 class MCSound : public MCConstantFunctionCtxt<MCStringRef, MCMultimediaEvalSound>
 {
 public:
+};
+
+// storeCredential(service, account, secret) — stores a secret securely.
+class MCStoreCredential : public MCFunction
+{
+    MCExpression *service;
+    MCExpression *account;
+    MCExpression *secret;
+public:
+    MCStoreCredential() : service(NULL), account(NULL), secret(NULL) {}
+    virtual ~MCStoreCredential();
+    virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+    virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 };
 
 class MCStacks : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalStacks>
@@ -1770,6 +1796,18 @@ public:
 	virtual ~MCMCISendString();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
     virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue &r_value);
+};
+
+// deleteCredential(service, account) — removes a stored credential.
+class MCDeleteCredential : public MCFunction
+{
+    MCExpression *service;
+    MCExpression *account;
+public:
+    MCDeleteCredential() : service(NULL), account(NULL) {}
+    virtual ~MCDeleteCredential();
+    virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+    virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 };
 
 class MCDeleteRegistry : public MCUnaryFunctionCtxt<MCStringRef, bool, MCFilesEvalDeleteRegistry, EE_SETREGISTRY_BADEXP, PE_SETREGISTRY_BADPARAM>

@@ -748,6 +748,8 @@
     <ClCompile Include="..\..\..\engine\src\exec-array.cpp"/>
     <ClCompile Include="..\..\..\engine\src\exec-battery.cpp"/>
     <ClCompile Include="..\..\..\engine\src\w32-battery.cpp"/>
+    <ClCompile Include="..\..\..\engine\src\exec-credentials.cpp"/>
+    <ClCompile Include="..\..\..\engine\src\w32-credentials.cpp"/>
     <ClCompile Include="..\..\..\engine\src\exec-datetime.cpp"/>
     <ClCompile Include="..\..\..\engine\src\exec-debugging.cpp"/>
     <ClCompile Include="..\..\..\engine\src\exec-dialog.cpp"/>

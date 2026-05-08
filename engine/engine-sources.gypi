@@ -645,6 +645,13 @@
 			'src/mac-battery.mm',
 			'src/w32-battery.cpp',
 
+			# Credential storage
+			'src/exec-credentials.h',
+			'src/exec-credentials.cpp',
+			'src/lnx-credentials.cpp',
+			'src/mac-credentials.mm',
+			'src/w32-credentials.cpp',
+
 			# Notifications
 			'src/notification.h',
 			'src/notification.cpp',

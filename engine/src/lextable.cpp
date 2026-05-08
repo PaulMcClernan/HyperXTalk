@@ -843,6 +843,7 @@ const LT factor_table[] =
         {"defaultstack", TT_PROPERTY, P_DEFAULT_STACK},
 		// MW-2011-11-24: [[ UpdateScreen ]] Property controlling whether screen updates are coalesced.
 		{"deferscreenupdates", TT_PROPERTY, P_DEFER_SCREEN_UPDATES},
+        {"deletecredential", TT_FUNCTION, F_DELETE_CREDENTIAL},
         {"deleteregistry", TT_FUNCTION, F_DELETE_REGISTRY},
         {"deleteresource", TT_FUNCTION, F_DELETE_RESOURCE},
 		// MW-2011-11-24: [[ Nice Folders ]] The adjective for 'the desktop folder'.
@@ -1517,6 +1518,7 @@ const LT factor_table[] =
         {"result", TT_FUNCTION, F_RESULT},
         {"retainimage", TT_PROPERTY, P_RETAIN_IMAGE},
         {"retainpostscript", TT_PROPERTY, P_RETAIN_POSTSCRIPT},
+        {"retrievecredential", TT_FUNCTION, F_RETRIEVE_CREDENTIAL},
         {"returnkeytype", TT_PROPERTY, P_RETURN_KEY_TYPE},
         {"revavailablehandlers", TT_PROPERTY, P_REV_AVAILABLE_HANDLERS},
 		{"revavailablevariables", TT_PROPERTY, P_REV_AVAILABLE_VARIABLES},
@@ -1712,6 +1714,7 @@ const LT factor_table[] =
 		{"statusicontooltip", TT_PROPERTY, P_STATUS_ICON_TOOLTIP},
 		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'sampleStandardDeviation' (aka stdDev / standardDeviation)
         {"stddev", TT_FUNCTION, F_SMP_STD_DEV},
+        {"storecredential", TT_FUNCTION, F_STORE_CREDENTIAL},
 		{"strokegradient", TT_PROPERTY, P_GRADIENT_STROKE},
         {"style", TT_PROPERTY, P_STYLE},
 		// MW-2011-12-08: [[ StyledText ]] Keyword for 'styledText' reserved word.
