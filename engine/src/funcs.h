@@ -26,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 
 #include "exec.h"
+#include "exec-battery.h"
 #include "param.h"
 #include "scriptpt.h"
 
@@ -299,6 +300,11 @@ public:
 	virtual ~MCBinaryDecode();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
+};
+
+class MCBatteryLevel : public MCConstantFunctionCtxt<integer_t, MCBatteryEvalBatteryLevel>
+{
+public:
 };
 
 class MCBuildNumber : public MCConstantFunctionCtxt<integer_t, MCEngineEvalBuildNumber>
@@ -1304,6 +1310,12 @@ class MCPopulationVariance : public MCParamFunctionCtxt<MCMathEvalPopulationVari
 public:
     MCPopulationVariance(){}
     virtual ~MCPopulationVariance(){}
+};
+
+// powerSource() — returns "battery", "ac", or "unknown".
+class MCPowerSource : public MCConstantFunctionCtxt<MCStringRef, MCBatteryEvalPowerSource>
+{
+public:
 };
 
 class MCProcessor : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalProcessor>

@@ -322,6 +322,7 @@ enum Functions {
     F_BASE_CONVERT,
     F_BASE64_DECODE,
     F_BASE64_ENCODE,
+    F_BATTERY_LEVEL,
     // AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
     F_BIDI_DIRECTION,
     F_BINARY_DECODE,
@@ -488,6 +489,7 @@ enum Functions {
     F_POP_STD_DEV,
 	// JS-2013-06-19: [[ StatsFunctions ]] Tag for 'populationVariance'
     F_POP_VARIANCE,
+    F_POWER_SOURCE,
     F_PROCESS_ID,
     F_PROCESSOR,
     F_PROPERTY_NAMES,

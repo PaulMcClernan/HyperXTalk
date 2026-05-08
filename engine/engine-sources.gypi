@@ -638,6 +638,13 @@
 
 			'src/mixin-refcounted.h',
 
+			# Battery status
+			'src/exec-battery.h',
+			'src/exec-battery.cpp',
+			'src/lnx-battery.cpp',
+			'src/mac-battery.mm',
+			'src/w32-battery.cpp',
+
 			# Notifications
 			'src/notification.h',
 			'src/notification.cpp',
