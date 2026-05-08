@@ -27,10 +27,11 @@ fire when HyperXTalk is in the background, a common pattern is to call
 <bringApplicationToFront> at the start of the handler so that any subsequent
 user interaction (such as a dialog or field update) is immediately visible.
 
->*Note:* On Linux there is no reliable cross-toolkit mechanism for a
-> background application to raise itself. The <bringApplicationToFront>
-> command silently succeeds on Linux without necessarily changing the
-> window order, depending on the window manager's policy.
+>*Note:* On Linux, the window manager may enforce focus-stealing prevention.
+> On desktop environments such as GNOME 3, the application may flash in the
+> taskbar instead of immediately coming to the front if it does not already
+> have recent user interaction. The command will still deiconify and raise
+> the window where the window manager permits it.
 
 Example:
 on hotkeyFired

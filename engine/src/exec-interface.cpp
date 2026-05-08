@@ -1297,13 +1297,16 @@ void MCInterfaceExecBeep(MCExecContext& ctxt, integer_t p_count)
 
 void MCInterfaceExecBringApplicationToFront(MCExecContext& ctxt)
 {
-#if defined(_MACOSX)
+#if defined(_MAC_DESKTOP)
     extern void MCMacActivateApplication(void);
     MCMacActivateApplication();
-#elif defined(_WINDOWS)
+#elif defined(_WINDOWS_DESKTOP)
     SetForegroundWindow(((MCScreenDC *)MCscreen)->getinvisiblewindow());
+#elif defined(_LINUX_DESKTOP)
+    extern void MCLinuxActivateApplication(void);
+    MCLinuxActivateApplication();
 #endif
-    // Linux: no reliable cross-toolkit foreground mechanism; silently succeed.
+    // Server and non-desktop builds: no GUI to bring forward.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
