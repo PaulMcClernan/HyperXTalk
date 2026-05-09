@@ -1,4 +1,12 @@
 script "com.livecode.scripteditor.behavior.editorcommon"
+
+-- Autocomplete is always enabled in HyperXTalk.
+-- Defined here so it is always in the message path regardless of
+-- whether ideautocompletelibrary has been inserted into back yet.
+function ideAutocompleteIsEnabled
+   return true
+end ideAutocompleteIsEnabled
+
 local sObjectId
 
 # The following variables store information used for the undo / redo system.

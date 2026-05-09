@@ -105,11 +105,6 @@ command ideAutocompleteHandleHelp pEditorId, pObjectId
    return true
 end ideAutocompleteHandleHelp
 
--- Replaces revEnvironmentEditionProperty("autocomplete") gate.
-function ideAutocompleteIsEnabled
-   return true
-end ideAutocompleteIsEnabled
-
 --------------------------------------------------------------------------------
 -- Private: word list
 --------------------------------------------------------------------------------
