@@ -10,6 +10,10 @@ local sCurrentEditorId
 -- Pending debounce timer
 local sUpdateTimer
 
+-- Mailbox for the debounced update (avoids quoting issues with long IDs in send)
+local sPendingEditorId
+local sPendingObjectId
+
 constant kPopupName = "ideAutoCompletePopup"
 constant kMinChars = 2
 constant kMaxCompletions = 15
@@ -56,8 +60,11 @@ end ideAutocompleteClearObjectCache
 -- Called on every relevant keypress. Debounced to avoid firing on every char.
 command ideAutocompleteUpdate pEditorId, pObjectId, pClasses
    cancel sUpdateTimer
-   send "ideAutocomplete_DoUpdate" && quote & pEditorId & quote \
-         && quote & pObjectId & quote to me in 150 milliseconds
+   -- Store params in script locals: long IDs contain quotes and cannot be
+   -- safely embedded in a send string.
+   put pEditorId into sPendingEditorId
+   put pObjectId into sPendingObjectId
+   send "ideAutocomplete_DoUpdate" to me in 150 milliseconds
    put the result into sUpdateTimer
 end ideAutocompleteUpdate
 
@@ -165,7 +172,12 @@ end ideAutocomplete_Deduplicate
 -- Private: debounced update
 --------------------------------------------------------------------------------
 
-private command ideAutocomplete_DoUpdate pEditorId, pObjectId
+private command ideAutocomplete_DoUpdate
+   -- Read from the mailbox set by ideAutocompleteUpdate
+   local pEditorId, pObjectId
+   put sPendingEditorId into pEditorId
+   put sPendingObjectId into pObjectId
+
    -- Get the partial word at the cursor
    dispatch "getCaretToken" to pEditorId
    local tToken
