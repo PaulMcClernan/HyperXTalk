@@ -2303,6 +2303,7 @@ void MCInterfaceEvalControlAtLoc(MCExecContext& ctxt, MCPoint p_location, MCStri
 void MCInterfaceEvalControlAtScreenLoc(MCExecContext& ctxt, MCPoint p_location, MCStringRef& r_control);
 
 void MCInterfaceExecBeep(MCExecContext& ctxt, integer_t p_count);
+void MCInterfaceExecBringApplicationToFront(MCExecContext& ctxt);
 void MCInterfaceExecClickCmd(MCExecContext& ctxt, uint2 p_button, MCPoint p_location, uint2 p_modifiers);
 
 void MCInterfaceExecCloseStack(MCExecContext& ctxt, MCStack *p_target);

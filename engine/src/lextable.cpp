@@ -307,6 +307,7 @@ const LT command_table[] =
         {"beep", TT_STATEMENT, S_BEEP},
         {"break", TT_STATEMENT, S_BREAK},
         {"breakpoint", TT_STATEMENT, S_BREAKPOINT},
+        {"bringApplicationToFront", TT_STATEMENT, S_BRING_APPLICATION_TO_FRONT},
         {"call", TT_STATEMENT, S_CALL},
         {"caller", TT_CHUNK, CT_CALLER},
         {"cancel", TT_STATEMENT, S_CANCEL},

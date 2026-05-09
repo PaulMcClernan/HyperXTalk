@@ -960,6 +960,12 @@ public:
 	virtual void exec_ctxt(MCExecContext &);
 };
 
+class MCBringApplicationToFront : public MCStatement
+{
+public:
+	virtual void exec_ctxt(MCExecContext &);
+};
+
 class MCCancel : public MCStatement
 {
 	MCExpression *m_id;

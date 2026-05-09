@@ -53,6 +53,8 @@ MCStatement *MCN_new_statement(int2 which)
 		return new MCAssertCmd;
 	case S_BEEP:
 		return new MCBeep;
+	case S_BRING_APPLICATION_TO_FRONT:
+		return new MCBringApplicationToFront;
 	case S_BREAK:
 		return new MCBreak;
 	case S_BREAKPOINT:

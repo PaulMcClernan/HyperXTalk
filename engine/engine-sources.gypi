@@ -735,6 +735,7 @@
 			'src/lnxkeymapping.cpp',
 			'src/lnxmisc.cpp',
 			'src/lnxmplayer.cpp',
+			'src/lnx-activate.cpp',
 			'src/lnx-core-compat.cpp',
 			'src/lnxpsprinter.cpp',
 			'src/lnxspec.cpp',
