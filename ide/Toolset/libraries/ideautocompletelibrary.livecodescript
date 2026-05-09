@@ -10,13 +10,27 @@ local sCurrentEditorId
 -- Pending debounce timer
 local sUpdateTimer
 
+-- Pending deferred-hide timer (gives the pointer time to travel to the popup)
+local sHideTimer
+
 -- Mailbox for the debounced update (avoids quoting issues with long IDs in send)
 local sPendingEditorId
 local sPendingObjectId
 
--- Currently selected line in the popup (1-based).
--- Authoritative source; hilitedLine is kept in sync where supported.
+-- Last clicked line in the popup (1-based). Set by PopupClicked.
 local sSelectedLine
+
+-- Caret state snapshotted at popup-show time (while the editor has focus).
+-- Used by AcceptCompletion so that a popup click, which may move OS focus
+-- away from the editor, does not cause getCaretToken / selectedChunk to
+-- read from the wrong field.
+local sSavedTokenStart
+local sSavedToken
+
+-- While true, ideAutocompleteCancelFind is suppressed.  Set around
+-- show stack + focus-return so that the focus-change events those
+-- operations fire do not immediately dismiss the popup.
+local sSuppressCancel
 
 constant kPopupName = "ideAutoCompletePopup"
 constant kMinChars = 2
@@ -24,6 +38,9 @@ constant kMaxCompletions = 50
 constant kMaxVisible = 10
 constant kPopupWidth = 220
 constant kItemHeight = 18
+-- How long (ms) to wait before hiding the popup after a cancel event.
+-- Increase this if the popup disappears before you can click an item.
+constant kHideDelay = 400
 
 --------------------------------------------------------------------------------
 -- Library lifecycle
@@ -74,46 +91,36 @@ end ideAutocompleteUpdate
 -- Called on mouseMove, closeField, exitField, escapeKey, returnInField.
 command ideAutocompleteCancelFind pEditorId
    cancel sUpdateTimer
-   -- Don't dismiss the popup while the mouse is hovering over it —
-   -- the user may be moving to click an item.
-   if sPopupShowing and the mouseStack is kPopupName then
+   -- Suppressed while show stack + focus-return are in flight to prevent the
+   -- focus-change events those operations fire from immediately closing the popup.
+   if sSuppressCancel then
+      exit ideAutocompleteCancelFind
+   end if
+   if sPopupShowing then
+      -- The mouse is already over the popup (user hovering to read/click): don't hide.
+      if the mouseStack is kPopupName then
+         exit ideAutocompleteCancelFind
+      end if
+      -- mouseMove fires on every pixel of travel, so the pointer may not have
+      -- reached the popup window yet.  Defer the hide long enough for the user
+      -- to move the pointer there.  ideAutocomplete_DeferredHide re-checks
+      -- mouseStack before actually hiding.
+      cancel sHideTimer
+      send "ideAutocomplete_DeferredHide" to me in kHideDelay milliseconds
+      put the result into sHideTimer
       exit ideAutocompleteCancelFind
    end if
    ideAutocomplete_HidePopup
 end ideAutocompleteCancelFind
 
--- Called when Tab is pressed. Accepts the selected completion if popup is
--- showing. Returns false to suppress normal tab handling, true to pass it on.
-command ideAutocompleteHandleTab pEditorId, pObjectId, @pPlaceholders, @pEditPlaceholder, @pEditChunks
-   if not sPopupShowing then
-      return true
-   end if
-   ideAutocomplete_AcceptCompletion pEditorId
-   return false
-end ideAutocompleteHandleTab
-
--- Called when an arrow key is pressed. Navigates the popup list if showing.
--- Returns false to consume the key, true to pass it on.
-command ideAutocompleteHandleArrow pEditorId, pKeyName, pObjectId, @pPlaceholders, @pEditPlaceholder, @pEditChunks
-   if not sPopupShowing then
-      return true
-   end if
-   if pKeyName is "up" then
-      ideAutocomplete_Navigate -1
-   else if pKeyName is "down" then
-      ideAutocomplete_Navigate 1
-   end if
-   return false
-end ideAutocompleteHandleArrow
-
--- Called when the Help key is pressed. Opens the dictionary for the selected
+-- Called when the Help key is pressed. Opens the dictionary for the hovered
 -- completion if the popup is showing. Returns true if handled.
 command ideAutocompleteHandleHelp pEditorId, pObjectId
    if not sPopupShowing then
       return false
    end if
    local tWord
-   put ideAutocomplete_SelectedWord() into tWord
+   put line sSelectedLine of the text of field "completions" of stack kPopupName into tWord
    if tWord is not empty then
       dispatch "revIDEOpenDictionary" with tWord
    end if
@@ -223,8 +230,36 @@ command ideAutocomplete_DoUpdate
       exit ideAutocomplete_DoUpdate
    end if
 
+   -- Snapshot caret position now, while the editor field has focus.
+   -- AcceptCompletion reads these saved values so a popup click (which may
+   -- shift OS focus away from the editor) doesn't corrupt the offset.
+   dispatch function "getScriptField" to pEditorId
+   local tSnapField, tSnapCursor
+   put the result into tSnapField
+   if tSnapField is not empty and there is a tSnapField then
+      put word 2 of the selectedChunk of tSnapField into tSnapCursor
+      put tSnapCursor - the number of chars of tToken into sSavedTokenStart
+   else
+      put 0 into sSavedTokenStart
+   end if
+   put tToken into sSavedToken
+
    ideAutocomplete_ShowPopup pEditorId, tMatches
 end ideAutocomplete_DoUpdate
+
+-- Not private: timer-fired sends cannot reach private handlers.
+command ideAutocomplete_ClearSuppressCancel
+   put false into sSuppressCancel
+end ideAutocomplete_ClearSuppressCancel
+
+-- Not private: timer-fired sends cannot reach private handlers.
+-- Hides the popup only if the pointer has not moved onto the popup window.
+command ideAutocomplete_DeferredHide
+   if the mouseStack is kPopupName then
+      exit ideAutocomplete_DeferredHide
+   end if
+   ideAutocomplete_HidePopup
+end ideAutocomplete_DeferredHide
 
 --------------------------------------------------------------------------------
 -- Private: popup creation
@@ -320,6 +355,9 @@ private command ideAutocomplete_ShowPopup pEditorId, pMatches
 
    set the topleft of stack kPopupName to tX, tY
 
+   -- Suppress cancelFind while show stack + refocus fire focus-change events.
+   -- A deferred send clears the flag after all synchronous handlers complete.
+   put true into sSuppressCancel
    if not sPopupShowing then
       show stack kPopupName
       put true into sPopupShowing
@@ -328,9 +366,11 @@ private command ideAutocomplete_ShowPopup pEditorId, pMatches
    -- Return keyboard focus to the script editor so the user can keep typing.
    -- The popup is purely a visual overlay; it must not own the keyboard.
    ideAutocomplete_RefocusEditor pEditorId
+   send "ideAutocomplete_ClearSuppressCancel" to me in 0 milliseconds
 end ideAutocomplete_ShowPopup
 
 private command ideAutocomplete_HidePopup
+   cancel sHideTimer
    if sPopupShowing then
       hide stack kPopupName
       put false into sPopupShowing
@@ -350,7 +390,12 @@ private command ideAutocomplete_RefocusEditor pEditorId
       local tField
       put the result into tField
       if tField is not empty and there is a tField then
-         focus on tField
+         -- Only call focus on if the script field doesn't already hold LiveCode
+         -- focus.  Re-focusing an already-focused field fires exitField, which
+         -- triggers ideAutocompleteCancelFind and immediately dismisses the popup.
+         if the long id of the focusedObject is not tField then
+            focus on tField
+         end if
       end if
    end if
 end ideAutocomplete_RefocusEditor
@@ -382,20 +427,27 @@ private command ideAutocomplete_GetCaretScreenPos pEditorId, @rX, @rY
    local tVScroll
    put the vScroll of tField into tVScroll
 
-   -- Cumulative height of all lines above the current one
-   local tAboveHeight
-   if tLineNum > 1 then
-      put the formattedHeight of line 1 to (tLineNum - 1) of tField into tAboveHeight
-   else
-      put 0 into tAboveHeight
-   end if
-
-   -- Height of the current line
+   -- Use the same constant-multiplier method as lineNumberToVerticalLoc in the
+   -- behavior: formattedHeight requires LiveCode to have measured every preceding
+   -- line, which is unreliable for long scripts. effectiveTextHeight is constant.
    local tLineHeight
-   put the formattedHeight of line tLineNum of tField into tLineHeight
+   put the effective textHeight of tField into tLineHeight
    if tLineHeight < 1 then
       put kItemHeight into tLineHeight
    end if
+
+   -- Top of the current line relative to the field's content area
+   local tAboveHeight
+   put (tLineNum - 1) * tLineHeight into tAboveHeight
+
+   -- Field top-margin offset (mirrors the kFudge = -4 the behavior uses)
+   local tMarginTop
+   if the number of items of the margins of tField = 4 then
+      put item 2 of the margins of tField into tMarginTop
+   else
+      put the margins of tField into tMarginTop
+   end if
+   subtract 4 from tMarginTop
 
    -- Convert card-space coordinates to screen coordinates.
    -- Extract the enclosing stack reference from the field's long id
@@ -421,8 +473,20 @@ private command ideAutocomplete_GetCaretScreenPos pEditorId, @rX, @rY
       end try
    end if
 
-   put tWinX + item 1 of tFieldRect + 4 into rX
-   put tWinY + item 2 of tFieldRect + tAboveHeight + tLineHeight - tVScroll into rY
+   -- X: align with the start of the token being typed.
+   -- formattedRect of char N returns card-space coordinates for that character,
+   -- so we get the exact horizontal position without any font-measurement guesswork.
+   local tTokenRect
+   if sSavedTokenStart > 0 then
+      put the formattedRect of char sSavedTokenStart of tField into tTokenRect
+   end if
+   if tTokenRect is not empty then
+      put tWinX + item 1 of tTokenRect into rX
+   else
+      put tWinX + item 1 of tFieldRect + 4 into rX
+   end if
+
+   put tWinY + item 2 of tFieldRect + tMarginTop + tAboveHeight + tLineHeight - tVScroll into rY
 end ideAutocomplete_GetCaretScreenPos
 
 --------------------------------------------------------------------------------
@@ -438,56 +502,29 @@ private command ideAutocomplete_AcceptCompletion pEditorId
       exit ideAutocomplete_AcceptCompletion
    end if
 
-   -- Get the partial token to replace
-   dispatch "getCaretToken" to pEditorId
-   local tToken
-   put the result into tToken
-
-   if tToken is empty then
+   -- Use the caret position snapshotted when the popup was shown.
+   -- Re-querying here would fail if a popup click moved OS focus off the editor.
+   if sSavedToken is empty then
       ideAutocomplete_HidePopup
       exit ideAutocomplete_AcceptCompletion
    end if
 
-   -- Find the cursor position and calculate where the token starts
-   dispatch function "getScriptField" to pEditorId
-   local tField
-   put the result into tField
-
-   local tCursor
-   put word 2 of the selectedChunk of tField into tCursor
-
-   local tTokenStart
-   put tCursor - the number of chars of tToken into tTokenStart
-
-   -- Use the editor's own textReplace so undo/redo and colorization work
-   dispatch "textReplace" to pEditorId with tTokenStart, tToken, tCompletion
+   -- Delegate to the behavior wrapper so textReplace runs in the behavior's
+   -- own call context rather than dispatched from this back-script library.
+   dispatch "ideAutocompleteInsertCompletion" to pEditorId with sSavedTokenStart, sSavedToken, tCompletion
 
    ideAutocomplete_HidePopup
 end ideAutocomplete_AcceptCompletion
 
---------------------------------------------------------------------------------
--- Private: list navigation
---------------------------------------------------------------------------------
-
-private command ideAutocomplete_Navigate pDelta
-   local tCount
-   put the number of lines of the text of field "completions" of stack kPopupName into tCount
-   put max(1, min(tCount, sSelectedLine + pDelta)) into sSelectedLine
-   try
-      set the hilitedLine of field "completions" of stack kPopupName to sSelectedLine
-   catch tErr
-   end try
-end ideAutocomplete_Navigate
-
-private function ideAutocomplete_SelectedWord
-   return line sSelectedLine of the text of field "completions" of stack kPopupName
-end ideAutocomplete_SelectedWord
 
 --------------------------------------------------------------------------------
 -- Popup click handler (dispatched from the popup field's script)
 --------------------------------------------------------------------------------
 
 on ideAutocomplete_PopupClicked
-   put the clickLine into sSelectedLine
+   -- the clickLine returns "line N" (a chunk expression), not a bare integer.
+   -- Extract the number so sSelectedLine stays consistently an integer,
+   -- matching what Navigate and AcceptCompletion expect.
+   put word 2 of the clickLine into sSelectedLine
    ideAutocomplete_AcceptCompletion sCurrentEditorId
 end ideAutocomplete_PopupClicked

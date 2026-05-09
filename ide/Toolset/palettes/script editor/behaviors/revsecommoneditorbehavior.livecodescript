@@ -64,6 +64,13 @@ command ideAutocompleteHandleHelp pEditorId, pObjectId
    return false
 end ideAutocompleteHandleHelp
 
+-- Called by ideautocompletelibrary to insert an autocomplete word.
+-- Wraps textReplace so it is always called from within the behavior's own
+-- context rather than dispatched from the back-script library.
+command ideAutocompleteInsertCompletion pOffset, pOldText, pNewText
+   textReplace pOffset, pOldText, pNewText
+end ideAutocompleteInsertCompletion
+
 local sObjectId
 
 # The following variables store information used for the undo / redo system.
