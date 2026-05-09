@@ -25,21 +25,19 @@ constant kItemHeight = 18
 --------------------------------------------------------------------------------
 
 on extensionInitialize
-   if the target is me then
-      insert the script of me into back
-      put false into sPopupShowing
-      ideAutocomplete_CreatePopup
-   end if
+   -- No "target is me" guard: the guard could prevent initialization when the
+   -- stack is loaded via send rather than dispatch.
+   insert the script of me into back
+   put false into sPopupShowing
+   -- Popup is created lazily in ideAutocomplete_ShowPopup.
 end extensionInitialize
 
 on extensionFinalize
-   if the target is me then
-      cancel sUpdateTimer
-      if there is a stack kPopupName then
-         delete stack kPopupName
-      end if
-      remove the script of me from back
+   cancel sUpdateTimer
+   if there is a stack kPopupName then
+      delete stack kPopupName
    end if
+   remove the script of me from back
 end extensionFinalize
 
 --------------------------------------------------------------------------------
@@ -172,7 +170,8 @@ end ideAutocomplete_Deduplicate
 -- Private: debounced update
 --------------------------------------------------------------------------------
 
-private command ideAutocomplete_DoUpdate
+-- Not private: timer-fired sends cannot reach private handlers.
+command ideAutocomplete_DoUpdate
    -- Read from the mailbox set by ideAutocompleteUpdate
    local pEditorId, pObjectId
    put sPendingEditorId into pEditorId

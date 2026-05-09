@@ -43,7 +43,7 @@ end ideAutocompleteIntrospectMessagePath
 command ideAutocompleteHandleTab pEditorId, pObjectId, @pPlaceholders, @pEditPlaceholder, @pEditChunks
    if there is a stack "ideautocompletelibrary" then
       dispatch "ideAutocompleteHandleTab" to stack "ideautocompletelibrary" with pEditorId, pObjectId
-      return the result
+      if it is "handled" then return the result
    end if
    return true
 end ideAutocompleteHandleTab
@@ -51,7 +51,7 @@ end ideAutocompleteHandleTab
 command ideAutocompleteHandleArrow pEditorId, pKeyName, pObjectId, @pPlaceholders, @pEditPlaceholder, @pEditChunks
    if there is a stack "ideautocompletelibrary" then
       dispatch "ideAutocompleteHandleArrow" to stack "ideautocompletelibrary" with pEditorId, pKeyName, pObjectId
-      return the result
+      if it is "handled" then return the result
    end if
    return true
 end ideAutocompleteHandleArrow
@@ -59,7 +59,7 @@ end ideAutocompleteHandleArrow
 command ideAutocompleteHandleHelp pEditorId, pObjectId
    if there is a stack "ideautocompletelibrary" then
       dispatch "ideAutocompleteHandleHelp" to stack "ideautocompletelibrary" with pEditorId, pObjectId
-      return the result
+      if it is "handled" then return the result
    end if
    return false
 end ideAutocompleteHandleHelp
