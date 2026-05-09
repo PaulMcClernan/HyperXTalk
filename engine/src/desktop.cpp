@@ -676,31 +676,6 @@ void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_butto
 	}
 }
 
-// Find the topmost group whose rect contains (x, y) among a card's top-level
-// controls. Used by MCPlatformHandleMouseScroll when getmfocused() returns NULL
-// (mouse is over empty space inside a group that has no focused child).
-// MCmousex/MCmousey and getrect() are both in stack-space coordinates.
-static MCObject *FindGroupUnderMouse(MCCard *p_card, int2 x, int2 y)
-{
-	MCObjptr *t_objptrs = p_card->getobjptrs();
-	if (t_objptrs == nil)
-		return nil;
-
-	// Iterate front-to-back (objptrs->prev() is the frontmost control).
-	MCObjptr *t_ptr = t_objptrs->prev();
-	do
-	{
-		MCControl *t_ctrl = t_ptr->getref();
-		if (t_ctrl->gettype() == CT_GROUP &&
-		    MCU_point_in_rect(t_ctrl->getrect(), x, y))
-			return t_ctrl;
-		t_ptr = t_ptr->prev();
-	}
-	while (t_ptr != t_objptrs->prev());
-
-	return nil;
-}
-
 void MCPlatformHandleMouseScroll(MCPlatformWindowRef p_window, int p_dx, int p_dy)
 {
 	MCStack *t_stack;
@@ -719,7 +694,7 @@ void MCPlatformHandleMouseScroll(MCPlatformWindowRef p_window, int p_dx, int p_d
 	// frontmost group whose rect contains the current mouse position.
 	mfocused = MCmousestackptr->getcard()->getmfocused();
 	if (mfocused == NULL)
-		mfocused = FindGroupUnderMouse(MCmousestackptr->getcard(), MCmousex, MCmousey);
+		mfocused = MCmousestackptr->getcard()->findGroupUnderPoint(MCmousex, MCmousey);
 	if (mfocused == NULL)
 		mfocused = MCmousestackptr -> getcard();
 	if (mfocused == NULL)
@@ -743,7 +718,7 @@ void MCPlatformHandleMouseScroll(MCPlatformWindowRef p_window, int p_dx, int p_d
 
 	mfocused = MCmousestackptr->getcard()->getmfocused();
 	if (mfocused == NULL)
-		mfocused = FindGroupUnderMouse(MCmousestackptr->getcard(), MCmousex, MCmousey);
+		mfocused = MCmousestackptr->getcard()->findGroupUnderPoint(MCmousex, MCmousey);
 	if (mfocused == NULL)
 		mfocused = MCmousestackptr -> getcard();
 	if (mfocused == NULL)

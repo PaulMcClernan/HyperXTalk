@@ -2796,6 +2796,29 @@ MCControl *MCCard::getrawmfocused()
 	return mfocused->getref();
 }
 
+// Returns the frontmost top-level group whose rect contains (x, y), or nil.
+// Used by scroll-event routing on all platforms when getmfocused() returns
+// NULL because the mouse is over empty space inside a group.
+MCObject *MCCard::findGroupUnderPoint(int2 x, int2 y)
+{
+	if (objptrs == nil)
+		return nil;
+
+	// Iterate front-to-back (objptrs->prev() is the frontmost control).
+	MCObjptr *t_ptr = objptrs->prev();
+	do
+	{
+		MCControl *t_ctrl = t_ptr->getref();
+		if (t_ctrl->gettype() == CT_GROUP &&
+		    MCU_point_in_rect(t_ctrl->getrect(), x, y))
+			return t_ctrl;
+		t_ptr = t_ptr->prev();
+	}
+	while (t_ptr != objptrs->prev());
+
+	return nil;
+}
+
 bool MCCard::selectedbutton(integer_t p_family, bool p_background, MCStringRef& r_string)
 {
 	Chunk_term ptype = p_background ? CT_BACKGROUND : CT_CARD;
