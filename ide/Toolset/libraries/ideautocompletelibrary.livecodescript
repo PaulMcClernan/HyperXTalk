@@ -399,11 +399,23 @@ private command ideAutocomplete_RefocusEditor pEditorId
          -- focus.  Re-focusing an already-focused field fires exitField, which
          -- triggers ideAutocompleteCancelFind and immediately dismisses the popup.
          if the long id of the focusedObject is not tField then
-            focus on tField
+            -- On Windows, focus on fires synchronous exitField which immediately
+            -- dismisses the popup, so defer it.  On macOS the deferred form
+            -- doesn't work, so call directly.
+            if the platform contains "win" then
+               send "FocusOnField tField" to me in 100 milliseconds
+            else
+               focus on tField
+            end if
          end if
       end if
    end if
 end ideAutocomplete_RefocusEditor
+
+-- Not private: timer-fired sends cannot reach private handlers.
+on FocusOnField tField
+   focus on tField
+end FocusOnField
 
 --------------------------------------------------------------------------------
 -- Private: caret screen position
