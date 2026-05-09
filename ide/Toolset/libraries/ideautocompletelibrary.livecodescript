@@ -14,9 +14,6 @@ local sUpdateTimer
 local sPendingEditorId
 local sPendingObjectId
 
--- Index of the currently selected completion (1-based).
--- Replaces hilitedLine so we don't depend on list-field style.
-local sSelectedLine
 
 constant kPopupName = "ideAutoCompletePopup"
 constant kMinChars = 2
@@ -238,6 +235,7 @@ private command ideAutocomplete_CreatePopup
    
    create field "completions" in card 1 of stack kPopupName
    --   set the style of field "completions" of stack kPopupName to "list"
+   set the listBehavior of field "completions" of stack kPopupName to TRUE
    set the lockText of field "completions" of stack kPopupName to true
    try
       set the traversalOn of field "completions" of stack kPopupName to false
@@ -284,8 +282,7 @@ private command ideAutocomplete_ShowPopup pEditorId, pMatches
          0, 0, kPopupWidth, tPopupHeight
 
    set the text of field "completions" of stack kPopupName to pMatches
-   put 1 into sSelectedLine
-   ideAutocomplete_HighlightSelection
+   set the hilitedLine of field "completions" of stack kPopupName to 1
 
    -- Calculate screen position below the current caret line
    local tX, tY
@@ -317,19 +314,6 @@ private command ideAutocomplete_HidePopup
    end if
    put empty into sCurrentEditorId
 end ideAutocomplete_HidePopup
-
---------------------------------------------------------------------------------
--- Private: selection highlighting (replaces hilitedLine for non-list fields)
---------------------------------------------------------------------------------
-
--- Highlights sSelectedLine in the popup by setting its backgroundColor and
--- clearing the backgroundColor of all other lines.
-private command ideAutocomplete_HighlightSelection
-   -- Clear all char-level background color, then paint the selected line.
-   set the backgroundColor of char 1 to -1 of field "completions" of stack kPopupName to empty
-   set the backgroundColor of line sSelectedLine of field "completions" of stack kPopupName \
-         to the hiliteColor
-end ideAutocomplete_HighlightSelection
 
 --------------------------------------------------------------------------------
 -- Private: caret screen position
@@ -407,7 +391,8 @@ end ideAutocomplete_GetCaretScreenPos
 
 private command ideAutocomplete_AcceptCompletion pEditorId
    local tCompletion
-   put line sSelectedLine of the text of field "completions" of stack kPopupName into tCompletion
+   put line (the hilitedLine of field "completions" of stack kPopupName) \
+         of the text of field "completions" of stack kPopupName into tCompletion
 
    if tCompletion is empty then
       ideAutocomplete_HidePopup
@@ -446,14 +431,18 @@ end ideAutocomplete_AcceptCompletion
 --------------------------------------------------------------------------------
 
 private command ideAutocomplete_Navigate pDelta
+   local tField
+   put the long id of field "completions" of stack kPopupName into tField
+   local tCurrent
+   put the hilitedLine of tField into tCurrent
    local tCount
-   put the number of lines of the text of field "completions" of stack kPopupName into tCount
-   put max(1, min(tCount, sSelectedLine + pDelta)) into sSelectedLine
-   ideAutocomplete_HighlightSelection
+   put the number of lines of the text of tField into tCount
+   set the hilitedLine of tField to max(1, min(tCount, tCurrent + pDelta))
 end ideAutocomplete_Navigate
 
 private function ideAutocomplete_SelectedWord
-   return line sSelectedLine of the text of field "completions" of stack kPopupName
+   return line (the hilitedLine of field "completions" of stack kPopupName) \
+         of the text of field "completions" of stack kPopupName
 end ideAutocomplete_SelectedWord
 
 --------------------------------------------------------------------------------
@@ -461,6 +450,6 @@ end ideAutocomplete_SelectedWord
 --------------------------------------------------------------------------------
 
 on ideAutocomplete_PopupClicked
-   put the clickLine into sSelectedLine
+   set the hilitedLine of field "completions" of stack kPopupName to the clickLine
    ideAutocomplete_AcceptCompletion sCurrentEditorId
 end ideAutocomplete_PopupClicked
