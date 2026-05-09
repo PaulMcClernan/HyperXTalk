@@ -356,7 +356,8 @@ private command ideAutocomplete_ShowPopup pEditorId, pMatches
    set the topleft of stack kPopupName to tX, tY
 
    -- Suppress cancelFind while show stack + refocus fire focus-change events.
-   -- A deferred send clears the flag after all synchronous handlers complete.
+   -- On Windows, palette windows still activate when shown and generate
+   -- additional async focus events, so we keep the flag set longer there.
    put true into sSuppressCancel
    if not sPopupShowing then
       show stack kPopupName
@@ -366,7 +367,11 @@ private command ideAutocomplete_ShowPopup pEditorId, pMatches
    -- Return keyboard focus to the script editor so the user can keep typing.
    -- The popup is purely a visual overlay; it must not own the keyboard.
    ideAutocomplete_RefocusEditor pEditorId
-   send "ideAutocomplete_ClearSuppressCancel" to me in 0 milliseconds
+   if the platform contains "win" then
+      send "ideAutocomplete_ClearSuppressCancel" to me in 150 milliseconds
+   else
+      send "ideAutocomplete_ClearSuppressCancel" to me in 0 milliseconds
+   end if
 end ideAutocomplete_ShowPopup
 
 private command ideAutocomplete_HidePopup
