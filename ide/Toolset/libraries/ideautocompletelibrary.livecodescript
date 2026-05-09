@@ -1,4 +1,4 @@
-script "ideautocompletelibrary"
+﻿script "ideautocompletelibrary"
 
 -- Word list cache: ruggedId -> return-separated sorted word list
 local sWordListCache
@@ -178,7 +178,7 @@ command ideAutocomplete_DoUpdate
    put sPendingObjectId into pObjectId
 
    -- Get the partial word at the cursor
-   dispatch "getCaretToken" to pEditorId
+   dispatch function "getCaretToken" to pEditorId
    local tToken
    put the result into tToken
 
@@ -232,9 +232,10 @@ private command ideAutocomplete_CreatePopup
    set the width of stack kPopupName to kPopupWidth
    set the height of stack kPopupName to kItemHeight
 
-   create field "completions" in stack kPopupName
+   create field "completions" in card 1 of stack kPopupName
    set the style of field "completions" of stack kPopupName to "list"
    set the lockText of field "completions" of stack kPopupName to true
+   set the traversalOn of field "completions" of stack kPopupName to false
    set the showBorder of field "completions" of stack kPopupName to true
    set the vScrollbar of field "completions" of stack kPopupName to false
    set the hScrollbar of field "completions" of stack kPopupName to false
@@ -244,7 +245,7 @@ private command ideAutocomplete_CreatePopup
    -- Wire up click-to-accept on the popup field
    set the script of field "completions" of stack kPopupName to \
          "on mouseUp" & return & \
-         "   send ""ideAutocomplete_PopupClicked"" to stack " & \
+         "   send ideAutocomplete_PopupClicked to stack " & \
          quote & kPopupName & quote & return & \
          "end mouseUp"
 end ideAutocomplete_CreatePopup
@@ -350,8 +351,23 @@ private command ideAutocomplete_GetCaretScreenPos pEditorId, @rX, @rY
       put kItemHeight into tLineHeight
    end if
 
-   put item 1 of tFieldRect + 4 into rX
-   put item 2 of tFieldRect + tAboveHeight + tLineHeight - tVScroll into rY
+   -- Convert card-space coordinates to screen coordinates.
+   -- The long id of the field encodes the owning stack reference after
+   -- the last " of stack " substring; the rect of that stack is its
+   -- content-area rect in screen coordinates.
+   local tLongId, tStackPos, tWindowRect
+   put the long id of tField into tLongId
+   put offset(" of stack ", tLongId) into tStackPos
+   if tStackPos > 0 then
+      local tStackRef
+      put char (tStackPos + 4) to -1 of tLongId into tStackRef
+      put the rect of tStackRef into tWindowRect
+   else
+      put "0,0,0,0" into tWindowRect
+   end if
+
+   put item 1 of tWindowRect + item 1 of tFieldRect + 4 into rX
+   put item 2 of tWindowRect + item 2 of tFieldRect + tAboveHeight + tLineHeight - tVScroll into rY
 end ideAutocomplete_GetCaretScreenPos
 
 --------------------------------------------------------------------------------
@@ -369,7 +385,7 @@ private command ideAutocomplete_AcceptCompletion pEditorId
    end if
 
    -- Get the partial token to replace
-   dispatch "getCaretToken" to pEditorId
+   dispatch function "getCaretToken" to pEditorId
    local tToken
    put the result into tToken
 
