@@ -7,6 +7,63 @@ function ideAutocompleteIsEnabled
    return true
 end ideAutocompleteIsEnabled
 
+--------------------------------------------------------------------------------
+-- Autocomplete entry-point stubs
+-- Dispatch to the library stack directly so there is no dependency on
+-- back-script insertion order.  Each stub is a safe no-op when the library
+-- stack is not yet loaded.
+--------------------------------------------------------------------------------
+
+command ideAutocompleteCancelFind pEditorId
+   if there is a stack "ideautocompletelibrary" then
+      dispatch "ideAutocompleteCancelFind" to stack "ideautocompletelibrary" with pEditorId
+   end if
+end ideAutocompleteCancelFind
+
+command ideAutocompleteClearObjectCache pObject
+   if there is a stack "ideautocompletelibrary" then
+      dispatch "ideAutocompleteClearObjectCache" to stack "ideautocompletelibrary" with pObject
+   end if
+end ideAutocompleteClearObjectCache
+
+command ideAutocompleteUpdate pEditorId, pObjectId, pClasses
+   if there is a stack "ideautocompletelibrary" then
+      dispatch "ideAutocompleteUpdate" to stack "ideautocompletelibrary" with pEditorId, pObjectId, pClasses
+   end if
+end ideAutocompleteUpdate
+
+command ideAutocompleteIntrospectMessagePath pObjectId
+   if there is a stack "ideautocompletelibrary" then
+      dispatch "ideAutocompleteIntrospectMessagePath" to stack "ideautocompletelibrary" with pObjectId
+   end if
+end ideAutocompleteIntrospectMessagePath
+
+-- Tab/arrow/help return a boolean; default to true (pass the key through)
+-- when the library is not loaded.
+command ideAutocompleteHandleTab pEditorId, pObjectId, @pPlaceholders, @pEditPlaceholder, @pEditChunks
+   if there is a stack "ideautocompletelibrary" then
+      dispatch "ideAutocompleteHandleTab" to stack "ideautocompletelibrary" with pEditorId, pObjectId
+      return the result
+   end if
+   return true
+end ideAutocompleteHandleTab
+
+command ideAutocompleteHandleArrow pEditorId, pKeyName, pObjectId, @pPlaceholders, @pEditPlaceholder, @pEditChunks
+   if there is a stack "ideautocompletelibrary" then
+      dispatch "ideAutocompleteHandleArrow" to stack "ideautocompletelibrary" with pEditorId, pKeyName, pObjectId
+      return the result
+   end if
+   return true
+end ideAutocompleteHandleArrow
+
+command ideAutocompleteHandleHelp pEditorId, pObjectId
+   if there is a stack "ideautocompletelibrary" then
+      dispatch "ideAutocompleteHandleHelp" to stack "ideautocompletelibrary" with pEditorId, pObjectId
+      return the result
+   end if
+   return false
+end ideAutocompleteHandleHelp
+
 local sObjectId
 
 # The following variables store information used for the undo / redo system.

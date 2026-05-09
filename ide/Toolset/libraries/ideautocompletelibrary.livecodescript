@@ -243,6 +243,12 @@ end ideAutocomplete_CreatePopup
 --------------------------------------------------------------------------------
 
 private command ideAutocomplete_ShowPopup pEditorId, pMatches
+   -- Lazy init: create the popup stack if extensionInitialize hasn't run yet
+   if there is not a stack kPopupName then
+      ideAutocomplete_CreatePopup
+      put false into sPopupShowing
+   end if
+
    put pEditorId into sCurrentEditorId
 
    local tCount
