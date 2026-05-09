@@ -14,6 +14,9 @@ local sUpdateTimer
 local sPendingEditorId
 local sPendingObjectId
 
+-- Currently selected line in the popup (1-based).
+-- Authoritative source; hilitedLine is kept in sync where supported.
+local sSelectedLine
 
 constant kPopupName = "ideAutoCompletePopup"
 constant kMinChars = 2
@@ -179,7 +182,7 @@ command ideAutocomplete_DoUpdate
    put sPendingObjectId into pObjectId
 
    -- Get the partial word at the cursor
-   dispatch function "getCaretToken" to pEditorId
+   dispatch "getCaretToken" to pEditorId
    local tToken
    put the result into tToken
 
@@ -282,7 +285,11 @@ private command ideAutocomplete_ShowPopup pEditorId, pMatches
          0, 0, kPopupWidth, tPopupHeight
 
    set the text of field "completions" of stack kPopupName to pMatches
-   set the hilitedLine of field "completions" of stack kPopupName to 1
+   put 1 into sSelectedLine
+   try
+      set the hilitedLine of field "completions" of stack kPopupName to 1
+   catch tErr
+   end try
 
    -- Calculate screen position below the current caret line
    local tX, tY
@@ -391,8 +398,7 @@ end ideAutocomplete_GetCaretScreenPos
 
 private command ideAutocomplete_AcceptCompletion pEditorId
    local tCompletion
-   put line (the hilitedLine of field "completions" of stack kPopupName) \
-         of the text of field "completions" of stack kPopupName into tCompletion
+   put line sSelectedLine of the text of field "completions" of stack kPopupName into tCompletion
 
    if tCompletion is empty then
       ideAutocomplete_HidePopup
@@ -400,7 +406,7 @@ private command ideAutocomplete_AcceptCompletion pEditorId
    end if
 
    -- Get the partial token to replace
-   dispatch function "getCaretToken" to pEditorId
+   dispatch "getCaretToken" to pEditorId
    local tToken
    put the result into tToken
 
@@ -431,18 +437,17 @@ end ideAutocomplete_AcceptCompletion
 --------------------------------------------------------------------------------
 
 private command ideAutocomplete_Navigate pDelta
-   local tField
-   put the long id of field "completions" of stack kPopupName into tField
-   local tCurrent
-   put the hilitedLine of tField into tCurrent
    local tCount
-   put the number of lines of the text of tField into tCount
-   set the hilitedLine of tField to max(1, min(tCount, tCurrent + pDelta))
+   put the number of lines of the text of field "completions" of stack kPopupName into tCount
+   put max(1, min(tCount, sSelectedLine + pDelta)) into sSelectedLine
+   try
+      set the hilitedLine of field "completions" of stack kPopupName to sSelectedLine
+   catch tErr
+   end try
 end ideAutocomplete_Navigate
 
 private function ideAutocomplete_SelectedWord
-   return line (the hilitedLine of field "completions" of stack kPopupName) \
-         of the text of field "completions" of stack kPopupName
+   return line sSelectedLine of the text of field "completions" of stack kPopupName
 end ideAutocomplete_SelectedWord
 
 --------------------------------------------------------------------------------
@@ -450,6 +455,6 @@ end ideAutocomplete_SelectedWord
 --------------------------------------------------------------------------------
 
 on ideAutocomplete_PopupClicked
-   set the hilitedLine of field "completions" of stack kPopupName to the clickLine
+   put the clickLine into sSelectedLine
    ideAutocomplete_AcceptCompletion sCurrentEditorId
 end ideAutocomplete_PopupClicked
