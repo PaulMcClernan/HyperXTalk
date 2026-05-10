@@ -84,6 +84,7 @@
 				'script-libraries/messageauthentication/messageauthentication.livecodescript',
 				'script-libraries/httpd/httpd.livecodescript',
 				'script-libraries/qr/qr.livecodescript',
+				'script-libraries/shakecontrol/shakecontrol.livecodescript',
 			],
 			
 			'dependencies':

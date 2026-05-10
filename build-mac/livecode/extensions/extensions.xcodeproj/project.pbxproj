@@ -341,6 +341,7 @@
 		8E82C92B4D99AB33D39D36E4 /* oauth2.livecodescript */ = {isa = PBXFileReference; lastKnownFileType = text; path = oauth2.livecodescript; sourceTree = "<group>"; };
 		9BBF5F91BBE92417E91E0E3B /* scriptitems.lcb */ = {isa = PBXFileReference; lastKnownFileType = text; path = scriptitems.lcb; sourceTree = "<group>"; };
 		A1654C1EED1C9603C1F29A39 /* revxml.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = revxml.xcodeproj; path = "../build-mac/livecode/revxml/revxml.xcodeproj"; sourceTree = SOURCE_ROOT; };
+		A2DE4339D8171E0994A8EF72 /* shakecontrol.livecodescript */ = {isa = PBXFileReference; lastKnownFileType = text; path = shakecontrol.livecodescript; sourceTree = "<group>"; };
 		A4ACC73C6515F992560A5DF6 /* messageauthentication.livecodescript */ = {isa = PBXFileReference; lastKnownFileType = text; path = messageauthentication.livecodescript; sourceTree = "<group>"; };
 		A7ED9D9FA3A4ECB37BFD973A /* json.lcb */ = {isa = PBXFileReference; lastKnownFileType = text; path = json.lcb; sourceTree = "<group>"; };
 		AACFA46176C9B05F38CD26C5 /* diff.livecodescript */ = {isa = PBXFileReference; lastKnownFileType = text; path = diff.livecodescript; sourceTree = "<group>"; };
@@ -350,6 +351,7 @@
 		AF74F4305B443D6612A680C9 /* svgpath.lcb */ = {isa = PBXFileReference; lastKnownFileType = text; path = svgpath.lcb; sourceTree = "<group>"; };
 		B28F90BE45D0E1FE780D759F /* httpd.livecodescript */ = {isa = PBXFileReference; lastKnownFileType = text; path = httpd.livecodescript; sourceTree = "<group>"; };
 		C2E83828E4A1938AE59C81E5 /* extension-utils.livecodescript */ = {isa = PBXFileReference; lastKnownFileType = text; path = "extension-utils.livecodescript"; sourceTree = "<group>"; };
+		C8C7055214BB7D3FB32A6DD3 /* shakecontrol.livecodescript */ = {isa = PBXFileReference; lastKnownFileType = text; path = shakecontrol.livecodescript; sourceTree = "<group>"; };
 		CA25D9A296BC16CE4571F8E7 /* yacc.gypi */ = {isa = PBXFileReference; explicitFileType = sourcecode; name = yacc.gypi; path = ../config/yacc.gypi; sourceTree = "<group>"; };
 		D0FD89D96D8C1BBD1D80A969 /* mime.livecodescript */ = {isa = PBXFileReference; lastKnownFileType = text; path = mime.livecodescript; sourceTree = "<group>"; };
 		D3E35F27FB4C94214782C1E4 /* configurations.gypi */ = {isa = PBXFileReference; explicitFileType = sourcecode; name = configurations.gypi; path = ../config/configurations.gypi; sourceTree = "<group>"; };
@@ -367,7 +369,15 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
-		05E3C8AFA752C5626BCAD914 /* BUILT_PRODUCTS_DIR */ = {
+		083BA2D5A447156EE6A896C7 /* browser */ = {
+			isa = PBXGroup;
+			children = (
+				09BBEEE465D5021FFCF76AE1 /* browser.lcb */,
+			);
+			path = browser;
+			sourceTree = "<group>";
+		};
+		0E1B81E431F682161B4EC6C9 /* BUILT_PRODUCTS_DIR */ = {
 			isa = PBXGroup;
 			children = (
 				F1BEB5EEE16CA33B26D2C1C6 /* com.livecode.library.animationengine */,
@@ -381,18 +391,11 @@
 				C9CA4CBD6A6F6C503E4D5982 /* com.livecode.library.mime */,
 				17AB9B1312E4750AE50CA29C /* com.livecode.library.oauth2 */,
 				781B120A2BA31EDAD034615C /* com.livecode.library.qr */,
+				B07E384590B209D2125BE9BE /* com.livecode.library.shakecontrol */,
 			);
 			name = BUILT_PRODUCTS_DIR;
 			path = packaged_extensions;
 			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		083BA2D5A447156EE6A896C7 /* browser */ = {
-			isa = PBXGroup;
-			children = (
-				09BBEEE465D5021FFCF76AE1 /* browser.lcb */,
-			);
-			path = browser;
-			sourceTree = "<group>";
 		};
 		145EA4B78DABF400869B9600 /* scriptitems */ = {
 			isa = PBXGroup;
@@ -496,14 +499,7 @@
 			path = diff;
 			sourceTree = "<group>";
 		};
-		53A835F3A0C8C300BAD662B8 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		60D9C84BCE5D008C76ACE7C0 /* script-libraries */ = {
+		4DCA7BD73E9988AB57F2DF36 /* script-libraries */ = {
 			isa = PBXGroup;
 			children = (
 				A2FF5EEE72706F788A7A6413 /* animationengine */,
@@ -517,8 +513,16 @@
 				D8A284D9A8CE6AC331A7C7AA /* mime */,
 				B1748DB52650EAF304C2D423 /* oauth2 */,
 				43F123D3AD4C1A812F740707 /* qr */,
+				B11A20B51CE09016D8597A66 /* shakecontrol */,
 			);
 			path = "script-libraries";
+			sourceTree = "<group>";
+		};
+		53A835F3A0C8C300BAD662B8 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		62B11DB0B211D1A8FED60C8A /* dropbox */ = {
@@ -680,10 +684,10 @@
 			isa = PBXGroup;
 			children = (
 				FAE473DD255136C9E5E1D437 /* .. */,
-				05E3C8AFA752C5626BCAD914 /* BUILT_PRODUCTS_DIR */,
+				0E1B81E431F682161B4EC6C9 /* BUILT_PRODUCTS_DIR */,
 				F778AD0ED2277CD13B305FA0 /* libraries */,
 				25E8F2B132C5DCBFEFA7FF0D /* modules */,
-				60D9C84BCE5D008C76ACE7C0 /* script-libraries */,
+				4DCA7BD73E9988AB57F2DF36 /* script-libraries */,
 				6ED7B665D37EA34CE950C70E /* widgets */,
 				6390F4DB7E5A4051B07069E1 /* notarealfile.txt */,
 			);
@@ -742,6 +746,22 @@
 				27EE243DE2BD5FE1ED7056D1 /* tile.lcb */,
 			);
 			path = tile;
+			sourceTree = "<group>";
+		};
+		B07E384590B209D2125BE9BE /* com.livecode.library.shakecontrol */ = {
+			isa = PBXGroup;
+			children = (
+				C8C7055214BB7D3FB32A6DD3 /* shakecontrol.livecodescript */,
+			);
+			path = com.livecode.library.shakecontrol;
+			sourceTree = "<group>";
+		};
+		B11A20B51CE09016D8597A66 /* shakecontrol */ = {
+			isa = PBXGroup;
+			children = (
+				A2DE4339D8171E0994A8EF72 /* shakecontrol.livecodescript */,
+			);
+			path = shakecontrol;
 			sourceTree = "<group>";
 		};
 		B1748DB52650EAF304C2D423 /* oauth2 */ = {
@@ -1190,6 +1210,7 @@
 				"script-libraries/messageauthentication/messageauthentication.livecodescript",
 				"script-libraries/httpd/httpd.livecodescript",
 				"script-libraries/qr/qr.livecodescript",
+				"script-libraries/shakecontrol/shakecontrol.livecodescript",
 			);
 			name = "Rule \"build_script_extension\"";
 			outputPaths = (
@@ -1204,6 +1225,7 @@
 				"$(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.messageauthentication/messageauthentication.livecodescript",
 				"$(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.httpd/httpd.livecodescript",
 				"$(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.qr/qr.livecodescript",
+				"$(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.shakecontrol/shakecontrol.livecodescript",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

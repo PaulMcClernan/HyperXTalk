@@ -9,7 +9,8 @@ all: \
     $(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.diff/diff.livecodescript \
     $(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.messageauthentication/messageauthentication.livecodescript \
     $(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.httpd/httpd.livecodescript \
-    $(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.qr/qr.livecodescript
+    $(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.qr/qr.livecodescript \
+    $(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.shakecontrol/shakecontrol.livecodescript
 
 $(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.extension-utils/extension-utils.livecodescript \
     : \
@@ -87,3 +88,10 @@ $(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.qr/qr.livecodescr
 	@mkdir -p "$(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.qr"
 	@echo note: "Building script extension qr.livecodescript"
 	"$(BUILT_PRODUCTS_DIR)/server-community" script-libraries/extension-utils/resources/extension-utils.lc "$(not_a_real_variable)buildextension" dummy1 dummy2 dummy3 ../ide-support/revdocsparser.livecodescript "script-libraries/qr" "qr.livecodescript" "$(BUILT_PRODUCTS_DIR)/packaged_extensions" "$(not_a_real_variable)false"
+
+$(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.shakecontrol/shakecontrol.livecodescript \
+    : \
+    script-libraries/shakecontrol/shakecontrol.livecodescript
+	@mkdir -p "$(BUILT_PRODUCTS_DIR)/packaged_extensions/com.livecode.library.shakecontrol"
+	@echo note: "Building script extension shakecontrol.livecodescript"
+	"$(BUILT_PRODUCTS_DIR)/server-community" script-libraries/extension-utils/resources/extension-utils.lc "$(not_a_real_variable)buildextension" dummy1 dummy2 dummy3 ../ide-support/revdocsparser.livecodescript "script-libraries/shakecontrol" "shakecontrol.livecodescript" "$(BUILT_PRODUCTS_DIR)/packaged_extensions" "$(not_a_real_variable)false"
