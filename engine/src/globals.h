@@ -97,6 +97,9 @@ extern int2 MCmousey;
 // Set by MCInterfaceExecPopoverStack; read by openwindow() in desktop-dc.cpp.
 extern MCRectangle MCpopoveranchor;
 extern int MCpopoveredge; // MCPlatformWindowEdge value
+// Currently open popover stack (nil if none). Used on Linux to implement
+// click-outside dismiss without a native popover widget.
+extern MCStack *MCpopoverstack;
 extern uint2 MCsiguser1;
 extern uint2 MCsiguser2;
 extern int4 MCinputfd;

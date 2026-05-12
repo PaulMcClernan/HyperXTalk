@@ -162,6 +162,7 @@ int2 MCmousex;
 int2 MCmousey;
 MCRectangle MCpopoveranchor = {0, 0, 0, 0};
 int MCpopoveredge = 0; // kMCPlatformWindowEdgeBottom
+MCStack *MCpopoverstack = nullptr;
 uint2 MCsiguser1;
 uint2 MCsiguser2;
 int4 MCinputfd = -1;
