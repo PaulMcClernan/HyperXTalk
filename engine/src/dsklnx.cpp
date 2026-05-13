@@ -1274,7 +1274,7 @@ virtual real64_t GetCurrentMicroseconds(void)
             r_tmp_name = MCValueRetain(kMCEmptyString);
 
  //        return MCStringCreateWithSysString(tmpnam(NULL), r_tmp_name);
-+		return t_success;
+		return t_success;
     }
 
     virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context)
