@@ -1,4 +1,3 @@
-Browser,revbrowser.dll
 Database,revdb.dll
 Speech,revspeech.dll
 XML,revxml.dll
