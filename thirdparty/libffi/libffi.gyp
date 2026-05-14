@@ -188,28 +188,23 @@
 					],
 				],
 
-				# Default empty value so <@(platform_include_dirs) is always
-				# defined even if no platform condition fires.  The conditions
-				# block below overwrites this with the real header path.
-				'platform_include_dirs%': [],
-
 				'silence_warnings': 1,
 			},
-			
+
 			'sources':
 			[
 			],
-			
+
 			'include_dirs':
 			[
-				'<@(platform_include_dirs)',
+				'<@(_platform_include_dirs)',
 			],
-			
+
 			'direct_dependent_settings':
 			{
 				'include_dirs':
 				[
-					'<@(platform_include_dirs)',
+					'<@(_platform_include_dirs)',
 				],
 
 				'defines':
