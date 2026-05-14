@@ -703,8 +703,8 @@
 			'src/native-layer-ios.mm',
 			'src/native-layer-mac.h',
 			'src/native-layer-mac.mm',
-			'src/native-layer-win32.cpp',
-			'src/native-layer-win32.h',
+			'src/native-layer-win32-wv2.cpp',
+			'src/native-layer-win32-wv2.h',
 			'src/native-layer-x11.cpp',
 			'src/native-layer-x11.h',
 			
@@ -1170,7 +1170,7 @@
 					'sources!':
 					[
 						'src/srvwindows.cpp',
-						'src/native-layer-win32.cpp',
+						'src/native-layer-win32-wv2.cpp',
 						'src/w32-notification.cpp',
 					],
 				},
