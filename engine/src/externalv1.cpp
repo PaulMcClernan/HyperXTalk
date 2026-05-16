@@ -2804,19 +2804,19 @@ MCExternalError MCExternalLicenseCheckEdition(unsigned int p_options, unsigned i
 			t_current_edition = kMCExternalLicenseTypeCommunity;
 			break;
 		
-        case kMCLicenseClassCommunityPlus:
-            t_current_edition = kMCExternalLicenseTypeCommunityPlus;
-            break;
+//        case kMCLicenseClassCommunityPlus:
+//            t_current_edition = kMCExternalLicenseTypeCommunityPlus;
+//            break;
             
-        case kMCLicenseClassEvaluation:
-		case kMCLicenseClassCommercial:
-			t_current_edition = kMCExternalLicenseTypeIndy;
-			break;
+//        case kMCLicenseClassEvaluation:
+//		case kMCLicenseClassCommercial:
+//			t_current_edition = kMCExternalLicenseTypeIndy;
+//			break;
 			
-		case kMCLicenseClassProfessionalEvaluation:
-		case kMCLicenseClassProfessional:
-			t_current_edition = kMCExternalLicenseTypeBusiness;
-			break;
+//		case kMCLicenseClassProfessionalEvaluation:
+//		case kMCLicenseClassProfessional:
+//			t_current_edition = kMCExternalLicenseTypeBusiness;
+//			break;
 			
 		default:
 			MCUnreachableReturn(kMCExternalErrorUnlicensed);

@@ -36,11 +36,11 @@ enum MCLicenseClass
 {
 	kMCLicenseClassNone,
 	kMCLicenseClassCommunity,
-    kMCLicenseClassCommunityPlus,
-    kMCLicenseClassEvaluation,
-	kMCLicenseClassCommercial,
-	kMCLicenseClassProfessionalEvaluation,
-	kMCLicenseClassProfessional,
+//    kMCLicenseClassCommunityPlus,
+//    kMCLicenseClassEvaluation,
+//	kMCLicenseClassCommercial,
+//	kMCLicenseClassProfessionalEvaluation,
+//	kMCLicenseClassProfessional,
 };
 
 struct MCLicenseParameters
@@ -69,66 +69,70 @@ void MCLicenseGetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef& r_limits);
 static const struct { MCLicenseClass license_class; const char *class_string; const char *edition_string; } s_class_map[] =
 {
     { kMCLicenseClassCommunity, "community", "community" },
-    { kMCLicenseClassCommunityPlus, "communityplus", "communityplus" },
-    { kMCLicenseClassEvaluation, "evaluation", "indy evaluation" },
-    { kMCLicenseClassCommercial, "commercial", "indy" },
-    { kMCLicenseClassProfessionalEvaluation, "professional evaluation", "business evaluation" },
-    { kMCLicenseClassProfessional, "professional", "business" },
+//    { kMCLicenseClassCommunityPlus, "communityplus", "communityplus" },
+//    { kMCLicenseClassEvaluation, "evaluation", "indy evaluation" },
+//    { kMCLicenseClassCommercial, "commercial", "indy" },
+//    { kMCLicenseClassProfessionalEvaluation, "professional evaluation", "business evaluation" },
+//    { kMCLicenseClassProfessional, "professional", "business" },
     { kMCLicenseClassNone, "", "" }
 };
 
 inline bool MCStringToLicenseClass(MCStringRef p_class, MCLicenseClass &r_class)
 {
-    for(uindex_t t_index = 0; t_index < sizeof(s_class_map) / sizeof(s_class_map[0]); ++t_index)
-    {
-        if (MCStringIsEqualToCString(p_class, s_class_map[t_index].class_string, kMCCompareCaseless))
-        {
-            r_class = s_class_map[t_index].license_class;
-            return true;
-        }
-    }
+	r_class = kMCLicenseClassCommunity;
+	return true;
+//    for(uindex_t t_index = 0; t_index < sizeof(s_class_map) / sizeof(s_class_map[0]); ++t_index)
+//    {
+//        if (MCStringIsEqualToCString(p_class, s_class_map[t_index].class_string, kMCCompareCaseless))
+//        {
+//            r_class = s_class_map[t_index].license_class;
+//            return true;
+//        }
+//    }
     
-    return false;
+//    return false;
 }
 
 inline bool MCEditionStringFromLicenseClass(MCLicenseClass p_class, MCStringRef &r_edition)
 {
-    if (p_class == kMCLicenseClassEvaluation)
-    {
-        p_class = kMCLicenseClassCommercial;
-    }
-    else if (p_class == kMCLicenseClassProfessionalEvaluation)
-    {
-        p_class = kMCLicenseClassProfessional;
-    }
-    else if (p_class == kMCLicenseClassNone)
-    {
+//    if (p_class == kMCLicenseClassEvaluation)
+//    {
+//        p_class = kMCLicenseClassCommercial;
+//    }
+//    else if (p_class == kMCLicenseClassProfessionalEvaluation)
+//    {
+//        p_class = kMCLicenseClassProfessional;
+//    }
+//    else if (p_class == kMCLicenseClassNone)
+//    {
 		p_class = kMCLicenseClassCommunity;
-	}
+//	}
+
+	return (MCStringCreateWithCString("community", r_edition));
+
+//    for(uindex_t t_index = 0; t_index < sizeof(s_class_map) / sizeof(s_class_map[0]); ++t_index)
+//    {
+//        if (s_class_map[t_index].license_class == p_class)
+//        {
+//            return MCStringCreateWithCString(s_class_map[t_index].edition_string, r_edition);
+//        }
+//    }
     
-    for(uindex_t t_index = 0; t_index < sizeof(s_class_map) / sizeof(s_class_map[0]); ++t_index)
-    {
-        if (s_class_map[t_index].license_class == p_class)
-        {
-            return MCStringCreateWithCString(s_class_map[t_index].edition_string, r_edition);
-        }
-    }
-    
-    return false;
+//    return false;
 }
 
-inline bool MCEditionStringToLicenseClass(MCStringRef p_edition, MCLicenseClass &r_class)
-{
-    for(uindex_t t_index = 0; t_index < sizeof(s_class_map) / sizeof(s_class_map[0]); ++t_index)
-    {
-        if (MCStringIsEqualToCString(p_edition, s_class_map[t_index].edition_string, kMCCompareCaseless))
-        {
-            r_class = s_class_map[t_index].license_class;
-            return true;
-        }
-    }
-    
-    return false;
-}
+//inline bool MCEditionStringToLicenseClass(MCStringRef p_edition, MCLicenseClass &r_class)
+//{
+//    for(uindex_t t_index = 0; t_index < sizeof(s_class_map) / sizeof(s_class_map[0]); ++t_index)
+//    {
+//        if (MCStringIsEqualToCString(p_edition, s_class_map[t_index].edition_string, kMCCompareCaseless))
+//        {
+//            r_class = s_class_map[t_index].license_class;
+//            return true;
+//        }
+//    }
+//    
+//    return false;
+//}
 
 #endif

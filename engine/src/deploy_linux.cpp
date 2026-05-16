@@ -477,17 +477,25 @@ static bool MCDeployToLinuxReadHeader(MCDeployFileRef p_file, bool p_is_android,
 	{
 		// MW-2013-04-29: [[ Linux64 ]] Allow any type of machine architecture.
 		//   (in particular, ARM and x64 in addition to x386).
-		if (r_header . e_type != ET_EXEC ||
-			r_header . e_version != EV_CURRENT)
-			return MCDeployThrow(kMCDeployErrorLinuxBadImage);
+		// Also allow ET_DYN for PIE executables built with modern toolchains
+		// (GCC >= 6 / Clang default on most distros since ~2017).
+		switch (r_header . e_type)
+		{
+			case ET_EXEC:
+			case ET_DYN:
+				break;
+			default:
+				return MCDeployThrow(kMCDeployErrorLinuxBadImage);
+		}
 	}
 	else
 	{
 		if (r_header . e_type != ET_DYN ||
-			!MCDeployIsValidAndroidArch(r_header.e_machine) ||
-			r_header . e_version != EV_CURRENT)
+			!MCDeployIsValidAndroidArch(r_header.e_machine))
 			return MCDeployThrow(kMCDeployErrorLinuxBadImage);
 	}
+	if (r_header . e_version != EV_CURRENT)
+	return MCDeployThrow(kMCDeployErrorLinuxBadImage);
 
 	return true;
 }
