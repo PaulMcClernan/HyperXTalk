@@ -286,13 +286,18 @@ echo.
 :: run icupkg.exe from the prebuilt ICU bin dir, but that binary is not always
 :: present (it is not included in the vcpkg ICU packages).  The Python script
 :: copies icudt58l.dat as the minimal dat and encodes it as a C++ array in the
-:: same format as encode_data.pl.  The output directory C:\shared_intermediate
-:: is where the MSBuild $(obj)\..\shared_intermediate macro resolves when $(obj)
-:: is the empty string (which it is in standalone vcxproj builds).
+:: same format as encode_data.pl.
+::
+:: The output directory is %~d0\shared_intermediate — where %~d0 is the drive
+:: letter of this script (the same drive as the repo checkout).  This matches
+:: where MSBuild resolves $(obj)\..\shared_intermediate when $(obj) is the
+:: empty string in standalone vcxproj builds: $(obj)\..\shared_intermediate
+:: = \..\shared_intermediate = \shared_intermediate = <repo-drive>:\shared_intermediate.
+set "SHARED_INT=%~d0\shared_intermediate"
 echo Pre-generating icudata-minimal.cpp (Python fallback for icupkg) ...
 echo Pre-generating icudata-minimal.cpp ... >> "%LOGFILE%"
 set "ICU_DAT=%~dp0prebuilt\unpacked\icu\x86_64-win32-v145_static_Debug\share\icudt58l.dat"
-python "%~dp0util\generate_icudata_cpp.py" "%ICU_DAT%" "C:\shared_intermediate" >> "%LOGFILE%" 2>&1
+python "%~dp0util\generate_icudata_cpp.py" "%ICU_DAT%" "%SHARED_INT%" >> "%LOGFILE%" 2>&1
 if errorlevel 1 (
     echo WARNING: Python fallback failed; will try MSBuild icupkg path.
 ) else (
@@ -316,8 +321,8 @@ if %MINICU_ERR% NEQ 0 (
     echo.
     echo MINIMAL_ICU_DATA FAILED — icupkg not found in prebuilt ICU bin dir.
     echo Trying Python-only fallback - icudata-minimal.cpp already pre-generated.
-    echo If C:\shared_intermediate\src\icudata-minimal.cpp exists, continuing...
-    if not exist "C:\shared_intermediate\src\icudata-minimal.cpp" (
+    echo If %SHARED_INT%\src\icudata-minimal.cpp exists, continuing...
+    if not exist "%SHARED_INT%\src\icudata-minimal.cpp" (
         echo ERROR: icudata-minimal.cpp not found. See %MINICU_LOG%
         exit /b 1
     )
@@ -339,7 +344,7 @@ type "%ICU_LOG%" >> "%LOGFILE%"
 if %ICU_ERR% NEQ 0 (
     echo.
     echo encode_minimal_icu_data failed - checking for pre-generated fallback ...
-    if exist "C:\shared_intermediate\src\icudata-minimal.cpp" (
+    if exist "%SHARED_INT%\src\icudata-minimal.cpp" (
         echo Fallback OK: using pre-generated icudata-minimal.cpp from Python script.
     ) else (
         echo ERROR: icudata-minimal.cpp not found. See %ICU_LOG% for details.
