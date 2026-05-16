@@ -217,8 +217,8 @@
 			'conditions':
 			[
 				[
-					# Only the CEF platforms need libbrowser-cefprocess
-					'OS in ("linux", "win") or host_os in ("linux", "win")',
+					# Only Linux uses CEF; Windows uses WebView2 instead
+					'OS == "linux" or host_os == "linux"',
 					{
 						'dependencies':
 						[
@@ -230,7 +230,7 @@
 						],
 					},
 				],
-				
+
 				[
 					'OS == "win"',
 					{
@@ -238,17 +238,6 @@
 						[
 							# WebView2 NuGet SDK headers (restored by the CI workflow)
 							'../packages/Microsoft.Web.WebView2.1.0.3912.50/build/native/include',
-						],
-
-						'copies':
-						[
-							{
-								'destination':'<(PRODUCT_DIR)/Externals/CEF/',
-								'files':
-								[
-									'<(PRODUCT_DIR)/libbrowser-cefprocess.exe',
-								],
-							},
 						],
 					},
 				],
@@ -288,7 +277,7 @@
     'conditions':
     [
         [
-            'OS in ("linux", "win") or host_os in ("linux", "win")',
+            'OS == "linux" or host_os == "linux"',
             {
                 'targets':
                 [
