@@ -23,20 +23,6 @@
 				'../libcore/include',
 			],
 
-			'conditions':
-			[
-				[
-					'OS == "win"',
-					{
-						'include_dirs':
-						[
-							# WebView2 NuGet SDK headers (restored by the CI workflow)
-							'../packages/Microsoft.Web.WebView2.1.0.3912.50/build/native/include',
-						],
-					},
-				],
-			],
-			
 			'sources':
 			[
 				'include/libbrowser.h',
@@ -247,7 +233,13 @@
 				
 				[
 					'OS == "win"',
-					{	
+					{
+						'include_dirs':
+						[
+							# WebView2 NuGet SDK headers (restored by the CI workflow)
+							'../packages/Microsoft.Web.WebView2.1.0.3912.50/build/native/include',
+						],
+
 						'copies':
 						[
 							{
