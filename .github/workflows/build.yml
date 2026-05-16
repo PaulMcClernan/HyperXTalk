@@ -276,6 +276,10 @@ jobs:
           Write-Host "Props file written to: $propsPath"
           echo "ForceImportBeforeCppTargets=$propsPath" >> $env:GITHUB_ENV
 
+      - name: Configure (GYP → Visual Studio projects)
+        shell: cmd
+        run: configure.bat
+
       - name: Build thirdparty libraries
         shell: cmd
         run: build-thirdparty-x64.bat
