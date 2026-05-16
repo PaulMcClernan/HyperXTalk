@@ -36,7 +36,10 @@
 // wins over a weak one, so server/non-GUI targets silently use this stub
 // while the GUI target uses the real implementation.
 extern "C" __attribute__((weak)) bool MCplatformIsDarkMode(void) { return false; }
-#else if defined(_LINUX)
+#elif defined(_LINUX)
+// Linux weak stub — GUI builds override this with the real implementation.
+// __attribute__((weak)) is GCC/Clang only; MSVC (Windows) gets its
+// implementation from w32dcs.cpp so no stub is needed there.
 extern "C" __attribute__((weak)) bool MCplatformIsDarkMode(void) { return false; }
 #endif
 
@@ -2192,7 +2195,4 @@ int16_t MCButton::GetCheckSize() const
 {
     // If we aren't using GTK at the theming engine, return the fixed size
     if (!IsNativeGTK())
-        return CHECK_SIZE;
-    
-    return MCcurtheme -> getmetric(WTHEME_METRIC_CHECKBUTTON_INDICATORSIZE);
-}
+     
