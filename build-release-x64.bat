@@ -205,8 +205,8 @@ echo libbrowser OK.
 echo.
 echo Building dbmysql (Release) ...
 echo Building dbmysql ... >> "%LOGFILE%"
-"%MSBUILD%" %VCXPROJ_DBMYSQL% /p:Configuration=Release /p:Platform=x64 /p:BuildProjectReferences=false "/p:SolutionDir=%~dp0build-win-x86_64\livecode\\" /v:minimal /nologo >> "%LOGFILE%" 2>&1
-if errorlevel 1 ( echo DBMYSQL BUILD FAILED. See %LOGFILE% & exit /b 1 )
+"%MSBUILD%" %VCXPROJ_DBMYSQL% /p:Configuration=Release /p:Platform=x64 /p:BuildProjectReferences=false "/p:SolutionDir=%~dp0build-win-x86_64\livecode\\" /v:minimal /nologo
+if errorlevel 1 ( echo DBMYSQL BUILD FAILED. & exit /b 1 )
 echo dbmysql OK.
 
 echo.
