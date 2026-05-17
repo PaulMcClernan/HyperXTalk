@@ -848,6 +848,76 @@ if %ERRORLEVEL% NEQ 0 (
 echo libxslt OK.
 
 echo.
+:: ----------------------------------------------------------
+:: Create stub libvlc.lib (import library for delay-loaded libvlc.dll)
+::
+:: VLC is not installed on CI runners.  The engine delay-loads libvlc.dll
+:: (DelayLoadDLLs in kernel.gyp) so no VLC installation is required at
+:: runtime — EnsureVLCInstance() returns false gracefully when the DLL is
+:: absent.  However the MSVC linker still requires an import library at
+:: link time in order to resolve the symbol references.
+::
+:: We generate a minimal stub import library from a .def file that lists
+:: every libvlc symbol imported by the engine (vlc-player.cpp).
+:: lib.exe /DEF creates the import library without needing VLC installed.
+:: ----------------------------------------------------------
+echo Creating stub libvlc.lib for linker ...
+set "VLC_DEF=%TEMP%\hxt_libvlc.def"
+set "VLC_LIB_DIR=%~dp0build-win-x86_64\livecode\Debug\lib"
+set "VLC_LIB=%VLC_LIB_DIR%\libvlc.lib"
+
+(
+    echo LIBRARY libvlc
+    echo EXPORTS
+    echo     libvlc_new
+    echo     libvlc_release
+    echo     libvlc_get_version
+    echo     libvlc_errmsg
+    echo     libvlc_log_set
+    echo     libvlc_media_new_location
+    echo     libvlc_media_new_path
+    echo     libvlc_media_parse
+    echo     libvlc_media_parse_with_options
+    echo     libvlc_media_release
+    echo     libvlc_media_get_duration
+    echo     libvlc_media_tracks_get
+    echo     libvlc_media_tracks_release
+    echo     libvlc_media_player_new
+    echo     libvlc_media_player_release
+    echo     libvlc_media_player_set_media
+    echo     libvlc_media_player_play
+    echo     libvlc_media_player_pause
+    echo     libvlc_media_player_stop
+    echo     libvlc_media_player_set_rate
+    echo     libvlc_media_player_get_state
+    echo     libvlc_media_player_get_time
+    echo     libvlc_media_player_set_time
+    echo     libvlc_media_player_get_length
+    echo     libvlc_media_player_set_hwnd
+    echo     libvlc_media_player_set_nsobject
+    echo     libvlc_media_player_set_xwindow
+    echo     libvlc_media_player_event_manager
+    echo     libvlc_event_attach
+    echo     libvlc_audio_set_volume
+    echo     libvlc_video_get_size
+    echo     libvlc_video_set_callbacks
+    echo     libvlc_video_set_format_callbacks
+) > "%VLC_DEF%"
+
+if not exist "%VLC_LIB_DIR%" mkdir "%VLC_LIB_DIR%"
+"%LIB_EXE%" /NOLOGO /DEF:"%VLC_DEF%" /MACHINE:X64 /OUT:"%VLC_LIB%" > nul 2>&1
+del "%VLC_DEF%" 2>nul
+if not exist "%VLC_LIB%" (
+    echo ERROR: Failed to create stub libvlc.lib
+    exit /b 1
+)
+echo Stub libvlc.lib created: %VLC_LIB%
+
+:: Make the directory visible to the linker via the LIB search path.
+:: (development.vcxproj may not have VLC_LIB_DIR in AdditionalLibraryDirectories)
+set "LIB=%VLC_LIB_DIR%;%LIB%"
+
+echo.
 echo Building engine ...
 
 set "EXE=build-win-x86_64\livecode\Debug\HyperXTalk.exe"
