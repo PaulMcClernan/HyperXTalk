@@ -245,8 +245,11 @@
 				'kernel-standalone.gyp:kernel-standalone',
 				'engine-common.gyp:security-community',
 				'lcb-modules.gyp:engine_lcb_modules',
+				# encode_version generates revbuild.h into $(SHARED_INTERMEDIATE_DIR)/include.
+				# direct_dependent_settings do not propagate transitively.
+				'engine-common.gyp:encode_version',
 			],
-			
+
 			'sources':
 			[
 				'>@(builtin_lcb_modules)',
