@@ -651,11 +651,10 @@ echo.
 :: ----------------------------------------------------------
 echo Patching kernel.lib with printer objects ...
 echo Patching kernel.lib with printer objects ... >> "%LOGFILE%"
-set "PRINTER_LOG=%~dp0compile-printer.log"
-call "%~dp0compile-printer.bat" Debug >> "%LOGFILE%" 2>&1
+call "%~dp0compile-printer.bat" Debug
 if errorlevel 1 (
     echo.
-    echo PRINTER PATCH FAILED. See %PRINTER_LOG% for details.
+    echo PRINTER PATCH FAILED.
     exit /b 1
 )
 echo Printer patch OK.
