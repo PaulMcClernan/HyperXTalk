@@ -831,18 +831,18 @@ echo.
 :: ----------------------------------------------------------
 echo Building libxml2 (2.15.3) ...
 echo Building libxml2 ... >> "%LOGFILE%"
-"%MSBUILD%" %VCXPROJ_LIBXML% /t:Rebuild  "/p:SolutionDir=%~dp0build-win-x86_64\livecode\\" /p:Configuration=Debug /p:Platform=x64 /p:BuildProjectReferences=false /v:minimal /nologo >> "%LOGFILE%" 2>&1
+"%MSBUILD%" %VCXPROJ_LIBXML% /t:Rebuild  "/p:SolutionDir=%~dp0build-win-x86_64\livecode\\" /p:Configuration=Debug /p:Platform=x64 /p:BuildProjectReferences=false /v:minimal /nologo
 if %ERRORLEVEL% NEQ 0 (
-    echo ERROR: libxml2 build failed. See %LOGFILE%
+    echo ERROR: libxml2 build failed.
     exit /b 1
 )
 echo libxml2 OK.
 
 echo Building libxslt ...
 echo Building libxslt ... >> "%LOGFILE%"
-"%MSBUILD%" %VCXPROJ_LIBXSLT% /t:Rebuild  "/p:SolutionDir=%~dp0build-win-x86_64\livecode\\" /p:Configuration=Debug /p:Platform=x64 /p:BuildProjectReferences=false /v:minimal /nologo >> "%LOGFILE%" 2>&1
+"%MSBUILD%" %VCXPROJ_LIBXSLT% /t:Rebuild  "/p:SolutionDir=%~dp0build-win-x86_64\livecode\\" /p:Configuration=Debug /p:Platform=x64 /p:BuildProjectReferences=false /v:minimal /nologo
 if %ERRORLEVEL% NEQ 0 (
-    echo ERROR: libxslt build failed. See %LOGFILE%
+    echo ERROR: libxslt build failed.
     exit /b 1
 )
 echo libxslt OK.
@@ -1019,9 +1019,9 @@ echo.
 :: ----------------------------------------------------------
 echo Building revxml (IDE XML external) ...
 echo Building revxml ... >> "%LOGFILE%"
-"%MSBUILD%" %VCXPROJ_REVXML% /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /p:BuildProjectReferences=false "/p:SolutionDir=%~dp0build-win-x86_64\livecode\\" /v:minimal /nologo >> "%LOGFILE%" 2>&1
+"%MSBUILD%" %VCXPROJ_REVXML% /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /p:BuildProjectReferences=false "/p:SolutionDir=%~dp0build-win-x86_64\livecode\\" /v:minimal /nologo
 if %ERRORLEVEL% NEQ 0 (
-    echo ERROR: revxml build failed. See %LOGFILE%
+    echo ERROR: revxml build failed.
     exit /b 1
 )
 echo revxml OK.
