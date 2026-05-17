@@ -203,6 +203,20 @@ if errorlevel 1 ( echo LIBBROWSER BUILD FAILED. See %LOGFILE% & exit /b 1 )
 echo libbrowser OK.
 
 echo.
+:: ----------------------------------------------------------
+:: Build libopenssl_stubs.lib for x64 Release.
+::
+:: dbmysql, dbpostgresql and others link against libopenssl_stubs
+:: to weakly reference OpenSSL symbols — must come BEFORE those.
+:: ----------------------------------------------------------
+echo Building libopenssl_stubs (Release x64) ...
+echo Building libopenssl_stubs ... >> "%LOGFILE%"
+"%MSBUILD%" %VCXPROJ_OPENSSL_STUBS% /p:Configuration=Release /p:Platform=x64 /p:BuildProjectReferences=false "/p:SolutionDir=%~dp0build-win-x86_64\livecode\\" /v:minimal /nologo
+if errorlevel 1 ( echo LIBOPENSSL_STUBS BUILD FAILED. & exit /b 1 )
+if not exist "%RELEASE_LIB_DIR%\libopenssl_stubs.lib" ( echo ERROR: libopenssl_stubs.lib not found in %RELEASE_LIB_DIR% & exit /b 1 )
+echo libopenssl_stubs OK.
+
+echo.
 echo Building dbmysql (Release) ...
 echo Building dbmysql ... >> "%LOGFILE%"
 "%MSBUILD%" %VCXPROJ_DBMYSQL% /p:Configuration=Release /p:Platform=x64 /p:BuildProjectReferences=false "/p:SolutionDir=%~dp0build-win-x86_64\livecode\\" /v:minimal /nologo
@@ -215,27 +229,6 @@ echo Building dbodbc ... >> "%LOGFILE%"
 "%MSBUILD%" %VCXPROJ_DBODBC%  "/p:SolutionDir=%~dp0build-win-x86_64\livecode\\" /p:Configuration=Release /p:Platform=x64 /p:BuildProjectReferences=false /v:minimal /nologo >> "%LOGFILE%" 2>&1
 if errorlevel 1 ( echo DBODBC BUILD FAILED. See %LOGFILE% & exit /b 1 )
 echo dbodbc OK.
-
-echo.
-:: ----------------------------------------------------------
-:: Build libopenssl_stubs.lib for x64 Release.
-::
-:: The Debug->Release lib bootstrap copies an x86 artifact of
-:: libopenssl_stubs.lib into Release\lib.  dbpostgresql links
-:: against libopenssl_stubs to weakly reference OpenSSL symbols;
-:: if the lib is x86 the linker ignores it (LNK4272) and every
-:: SSL_* symbol becomes unresolved.  We build the x64 Release
-:: version here and overwrite the bad x86 copy before linking.
-:: ----------------------------------------------------------
-echo Building libopenssl_stubs (Release x64) ...
-echo Building libopenssl_stubs ... >> "%LOGFILE%"
-:: Pass SolutionDir explicitly so $(SolutionDir)$(Configuration)\lib resolves to
-:: build-win-x86_64\livecode\Release\lib\ — the same path used by the .sln Debug
-:: build — and overwrites the x86 artifact left there by the bootstrap step.
-"%MSBUILD%" %VCXPROJ_OPENSSL_STUBS% /p:Configuration=Release /p:Platform=x64 /p:BuildProjectReferences=false "/p:SolutionDir=%~dp0build-win-x86_64\livecode\\" /v:minimal /nologo >> "%LOGFILE%" 2>&1
-if errorlevel 1 ( echo LIBOPENSSL_STUBS BUILD FAILED. See %LOGFILE% & exit /b 1 )
-if not exist "%RELEASE_LIB_DIR%\libopenssl_stubs.lib" ( echo ERROR: libopenssl_stubs.lib not found in %RELEASE_LIB_DIR% & exit /b 1 )
-echo libopenssl_stubs OK.
 
 echo.
 echo Building dbpostgresql (Release) ...
