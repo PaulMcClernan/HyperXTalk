@@ -912,10 +912,9 @@ if not exist "%VLC_LIB%" (
     exit /b 1
 )
 echo Stub libvlc.lib created: %VLC_LIB%
-
-:: Make the directory visible to the linker via the LIB search path.
-:: (development.vcxproj may not have VLC_LIB_DIR in AdditionalLibraryDirectories)
-set "LIB=%VLC_LIB_DIR%;%LIB%"
+:: The directory is added to the linker's AdditionalLibraryDirectories via the
+:: atl-include.props ForceImportBeforeCppTargets file (see CI workflow step
+:: "Inject ATL include path via MSBuild props").  No LIB env var change needed.
 
 echo.
 echo Building engine ...
