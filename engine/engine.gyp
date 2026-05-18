@@ -219,6 +219,14 @@
 				'VCLinkerTool':
 				{
 					'SubSystem': '1',	# /SUBSYSTEM:CONSOLE
+					# Do NOT set AdditionalDependencies or AdditionalLibraryDirectories
+					# here as strings.  GYP collects link_settings.libraries and
+					# link_settings.library_dirs from all_dependent_settings as Python
+					# lists and calls _ToolAppend to merge them.  If msvs_settings
+					# already holds a string for the same key, _ToolSetOrAppend raises
+					# TypeError("Appending list to non-list").  The curl, ICU, OpenSSL
+					# and Thirdparty dirs/libs all propagate correctly through GYP's
+					# own list mechanism; no override is needed here.
 				},
 			},
 

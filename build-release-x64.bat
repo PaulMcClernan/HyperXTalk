@@ -445,14 +445,30 @@ echo Bootstrapping lc-compile.exe + ICU DLLs ...
 copy /Y "%LC_COMPILE_DBG%"          "%LC_COMPILE_REL%"            > nul
 :: ICU DLLs are not produced by the Debug engine build; copy directly from the
 :: prebuilt unpacked directory so server-community.exe can find them at runtime.
+:: ICU DLLs — lc-compile.exe links libScript → libFoundation → ICU and
+:: therefore needs the ICU data DLLs at runtime.  The prebuilt ICU is a
+:: static-only build with no DLLs; fall back to Debug\ (which got them from
+:: ide\Runtime\Windows\x86-64\ during build-engine-x64.bat) or directly to
+:: ide\Runtime\Windows\x86-64\ as a second fallback.
 copy /Y "%ICU_REL_BIN%\icudt58.dll" "%OUTDIR%\icudt58.dll"        > nul 2>nul
 copy /Y "%ICU_REL_BIN%\icuin58.dll" "%OUTDIR%\icuin58.dll"        > nul 2>nul
 copy /Y "%ICU_REL_BIN%\icutu58.dll" "%OUTDIR%\icutu58.dll"        > nul 2>nul
 copy /Y "%ICU_REL_BIN%\icuuc58.dll" "%OUTDIR%\icuuc58.dll"        > nul 2>nul
 if not exist "%OUTDIR%\icuuc58.dll" (
-    echo WARNING: ICU DLLs not found in prebuilt directory: %ICU_REL_BIN%
-    echo          The ICU prebuilt is a static library build -- DLLs are not expected.
-    echo          Continuing without ICU DLLs; server-community.exe links ICU statically.
+    set "ICU_RT_SRC=%~dp0ide\Runtime\Windows\x86-64"
+    for %%F in (icudt58.dll icuin58.dll icutu58.dll icuuc58.dll) do (
+        if exist "%DBG_DIR%\%%F" (
+            copy /Y "%DBG_DIR%\%%F" "%OUTDIR%\%%F" > nul
+        ) else if exist "%ICU_RT_SRC%\%%F" (
+            copy /Y "%ICU_RT_SRC%\%%F" "%OUTDIR%\%%F" > nul
+        )
+    )
+    if not exist "%OUTDIR%\icuuc58.dll" (
+        echo WARNING: ICU DLLs not found in Debug or Runtime dir.
+        echo          lc-compile.exe may fail with STATUS_DLL_NOT_FOUND.
+    ) else (
+        echo ICU DLLs copied to Release from runtime/Debug fallback.
+    )
 )
 copy /Y "%DBG_DIR%\libcrypto-3-x64.dll" "%OUTDIR%\libcrypto-3-x64.dll" > nul 2>nul
 copy /Y "%DBG_DIR%\libssl-3-x64.dll"    "%OUTDIR%\libssl-3-x64.dll"    > nul 2>nul
@@ -505,10 +521,27 @@ if exist "%DBG_SHARED_SRC%\startupstack.cpp" (
 )
 
 echo.
+:: ----------------------------------------------------------
+:: Build LCB engine modules (Release).
+::
+:: The engine_lcb_modules custom build action runs lc-compile.exe
+:: from $(OutDir) (Release dir).  lc-compile.exe links against
+:: libScript → libFoundation → ICU and requires the ICU data DLLs
+:: at runtime.  The ICU DLLs were copied to Release\ above (with
+:: fallback from Debug\ / ide\Runtime\Windows\x86-64\), so
+:: lc-compile.exe should find them and run correctly.
+:: ----------------------------------------------------------
 echo Building LCB engine modules (Release) ...
 echo Building LCB engine modules ... >> "%LOGFILE%"
-"%MSBUILD%" %VCXPROJ_LCB_MODULES%  "/p:SolutionDir=%~dp0build-win-x86_64\livecode\\" /p:Configuration=Release /p:Platform=x64 /p:BuildProjectReferences=false /v:minimal /nologo >> "%LOGFILE%" 2>&1
-if errorlevel 1 ( echo LCB MODULES BUILD FAILED. See %LOGFILE% & exit /b 1 )
+set "LCB_MOD_LOG=%~dp0build-lcb-modules-release.log"
+"%MSBUILD%" %VCXPROJ_LCB_MODULES%  "/p:SolutionDir=%~dp0build-win-x86_64\livecode\\" /p:Configuration=Release /p:Platform=x64 /p:BuildProjectReferences=false /v:minimal /nologo > "%LCB_MOD_LOG%" 2>&1
+set LCB_MOD_ERR=%ERRORLEVEL%
+type "%LCB_MOD_LOG%"
+type "%LCB_MOD_LOG%" >> "%LOGFILE%"
+if %LCB_MOD_ERR% NEQ 0 (
+    echo LCB MODULES BUILD FAILED - full output above.
+    exit /b 1
+)
 echo LCB modules OK.
 
 echo.
