@@ -174,12 +174,12 @@
 
 				'lcb-modules.gyp:engine_lcb_modules',
 
-				# libcurl link_settings do not reliably propagate transitively
-				# through static libraries on Windows; list it here directly so
-				# the server.vcxproj linker can find libcurl_a.lib.
+				# Direct dep so Xcode/make generators pick up libcurl include paths.
+				# Windows link settings are handled via all_dependent_settings in
+				# libcurl.gyp so they propagate correctly through the MSVS generator.
 				'../prebuilt/libcurl.gyp:libcurl',
 			],
-			
+
 			'sources':
 			[
 				'<@(engine_security_source_files)',
@@ -213,7 +213,7 @@
 					},
 				],
 			],
-			
+
 			'msvs_settings':
 			{
 				'VCLinkerTool':
@@ -221,34 +221,6 @@
 					'SubSystem': '1',	# /SUBSYSTEM:CONSOLE
 				},
 			},
-
-			# libcurl's link_settings do not propagate reliably through
-			# type:'none' GYP targets on MSVC when target_conditions are used.
-			# Spell out the Windows curl link settings directly here so that
-			# server.vcxproj gets AdditionalLibraryDirectories and
-			# AdditionalDependencies for libcurl_a.lib.
-			'target_conditions':
-			[
-				[
-					'toolset_os == "win"',
-					{
-						'link_settings':
-						{
-							'library_dirs':
-							[
-								'../prebuilt/unpacked/curl/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib',
-							],
-							'libraries':
-							[
-								'-llibcurl_a',
-								'-lws2_32',
-								'-lwldap32',
-								'-lcrypt32',
-							],
-						},
-					},
-				],
-			],
 
 			'all_dependent_settings':
 			{
