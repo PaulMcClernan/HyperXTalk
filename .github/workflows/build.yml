@@ -15,6 +15,13 @@ on:
     tags:
       - 'v*'
 
+# Opt in to Node.js 24 for all actions runners.
+# actions/checkout, setup-python, upload-artifact etc. ship Node.js 24-compatible
+# releases within their current major versions (@v4 / @v5); this env var tells
+# the runner to use them before the June 2nd 2026 forced cut-over.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
 
   # ─────────────────────────────────────────────────────────────────────────────
