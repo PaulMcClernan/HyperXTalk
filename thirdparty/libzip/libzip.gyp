@@ -203,11 +203,27 @@
 							],
 						],
 
+						'defines':
+						[
+							# Compile the static library itself without dllexport/dllimport
+							# decorations so the object files contain plain zip_* symbols.
+							'ZIP_STATIC',
+						],
+
 						'direct_dependent_settings':
 						{
 							'include_dirs':
 							[
 								'include',
+							],
+
+							'defines':
+							[
+								# Propagate ZIP_STATIC to all consumers so zip.h does not
+								# decorate declarations with __declspec(dllimport) on Windows.
+								# Without this, consumers generate __imp_zip_* references that
+								# the static libzip.lib cannot satisfy (it has plain zip_*).
+								'ZIP_STATIC',
 							],
 						},
 					},
