@@ -507,8 +507,15 @@ if exist "%DBG_SHARED_SRC%\startupstack.cpp" (
 echo.
 echo Building LCB engine modules (Release) ...
 echo Building LCB engine modules ... >> "%LOGFILE%"
-"%MSBUILD%" %VCXPROJ_LCB_MODULES%  "/p:SolutionDir=%~dp0build-win-x86_64\livecode\\" /p:Configuration=Release /p:Platform=x64 /p:BuildProjectReferences=false /v:minimal /nologo >> "%LOGFILE%" 2>&1
-if errorlevel 1 ( echo LCB MODULES BUILD FAILED. See %LOGFILE% & exit /b 1 )
+set "LCB_MOD_LOG=%~dp0build-lcb-modules-release.log"
+"%MSBUILD%" %VCXPROJ_LCB_MODULES%  "/p:SolutionDir=%~dp0build-win-x86_64\livecode\\" /p:Configuration=Release /p:Platform=x64 /p:BuildProjectReferences=false /v:minimal /nologo > "%LCB_MOD_LOG%" 2>&1
+if errorlevel 1 (
+    echo LCB MODULES BUILD FAILED - full output:
+    type "%LCB_MOD_LOG%"
+    type "%LCB_MOD_LOG%" >> "%LOGFILE%"
+    exit /b 1
+)
+type "%LCB_MOD_LOG%" >> "%LOGFILE%"
 echo LCB modules OK.
 
 echo.
