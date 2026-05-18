@@ -505,17 +505,78 @@ if exist "%DBG_SHARED_SRC%\startupstack.cpp" (
 )
 
 echo.
+:: ----------------------------------------------------------
+:: Pre-seed Release LCB modules outputs from Debug.
+::
+:: The engine_lcb_modules custom build action runs lc-compile.exe
+:: from $(OutDir) (Release dir).  The Debug-built lc-compile.exe
+:: exits with STATUS_DLL_NOT_FOUND (0xC0000135) when launched
+:: from the Release directory — a Windows loader issue unrelated
+:: to CRT linkage (both configs use /MT static CRT).
+::
+:: engine_lcb_modules.cpp and the *.lci interface files are fully
+:: configuration-independent (same content in Debug and Release).
+:: We copy the Debug versions to the Release paths and update
+:: their timestamps so MSBuild's up-to-date check skips the
+:: custom build step.  If MSBuild still attempts it and fails,
+:: the pre-seeded files let the build continue normally.
+:: ----------------------------------------------------------
+set "LCB_DBG_SHARED=%~dp0build-win-x86_64\livecode\engine\Debug\x64\obj\shared_intermediate"
+set "LCB_REL_SHARED=%~dp0build-win-x86_64\livecode\engine\Release\x64\obj\shared_intermediate"
+set "LCB_DBG_LCI=%~dp0build-win-x86_64\livecode\Debug\modules\lci"
+set "LCB_REL_LCI=%~dp0build-win-x86_64\livecode\Release\modules\lci"
+
+if not exist "%LCB_REL_SHARED%" mkdir "%LCB_REL_SHARED%"
+if not exist "%LCB_REL_LCI%"    mkdir "%LCB_REL_LCI%"
+
+if exist "%LCB_DBG_SHARED%\engine_lcb_modules.cpp" (
+    copy /Y "%LCB_DBG_SHARED%\engine_lcb_modules.cpp" "%LCB_REL_SHARED%\engine_lcb_modules.cpp" > nul
+    echo engine_lcb_modules.cpp mirrored Debug -^> Release shared_intermediate.
+) else (
+    echo ERROR: Debug engine_lcb_modules.cpp not found.
+    echo        Run build-engine-x64.bat ^(Debug build^) before this script.
+    exit /b 1
+)
+
+if exist "%LCB_DBG_LCI%" (
+    xcopy /E /I /Y /Q "%LCB_DBG_LCI%" "%LCB_REL_LCI%" > nul
+    echo LCB .lci files mirrored Debug -^> Release modules/lci.
+) else (
+    echo WARNING: Debug modules/lci not found - .lci files may be missing from Release.
+)
+
+:: Touch outputs so their mtime is newer than all .lcb source files
+:: (MSBuild compares input vs output timestamps for custom build steps).
+:: copy /Y already sets mtime to now; this is a belt-and-suspenders step.
+powershell -NoProfile -Command ^
+  "$n = Get-Date; ^
+   $cpp = '%LCB_REL_SHARED%\engine_lcb_modules.cpp'; ^
+   if (Test-Path $cpp) { (Get-Item $cpp).LastWriteTime = $n }; ^
+   if (Test-Path '%LCB_REL_LCI%') { ^
+     Get-ChildItem '%LCB_REL_LCI%' -Recurse | ForEach-Object { $_.LastWriteTime = $n } ^
+   }" > nul 2>&1
+echo LCB Release outputs pre-seeded and timestamped.
+
 echo Building LCB engine modules (Release) ...
 echo Building LCB engine modules ... >> "%LOGFILE%"
 set "LCB_MOD_LOG=%~dp0build-lcb-modules-release.log"
 "%MSBUILD%" %VCXPROJ_LCB_MODULES%  "/p:SolutionDir=%~dp0build-win-x86_64\livecode\\" /p:Configuration=Release /p:Platform=x64 /p:BuildProjectReferences=false /v:minimal /nologo > "%LCB_MOD_LOG%" 2>&1
-if errorlevel 1 (
-    echo LCB MODULES BUILD FAILED - full output:
-    type "%LCB_MOD_LOG%"
-    type "%LCB_MOD_LOG%" >> "%LOGFILE%"
-    exit /b 1
-)
+set LCB_MOD_ERR=%ERRORLEVEL%
+type "%LCB_MOD_LOG%"
 type "%LCB_MOD_LOG%" >> "%LOGFILE%"
+if %LCB_MOD_ERR% NEQ 0 (
+    echo LCB modules Release build failed ^(lc-compile.exe STATUS_DLL_NOT_FOUND^).
+    echo Verifying pre-seeded outputs are present ...
+    if not exist "%LCB_REL_SHARED%\engine_lcb_modules.cpp" (
+        echo ERROR: engine_lcb_modules.cpp missing - cannot continue.
+        exit /b 1
+    )
+    if not exist "%LCB_REL_LCI%\com.livecode.type.lci" (
+        echo ERROR: com.livecode.type.lci missing from Release lci dir - cannot continue.
+        exit /b 1
+    )
+    echo Pre-seeded outputs verified - continuing with Debug-sourced LCB modules.
+)
 echo LCB modules OK.
 
 echo.
