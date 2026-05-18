@@ -324,6 +324,36 @@ jobs:
             }
           }
 
+      - name: Replace 32-bit curl prebuilt with vcpkg x64 static build
+        shell: pwsh
+        run: |
+          # The curl prebuilt bundled in the repo was compiled as x86 (32-bit) and
+          # triggers LNK4272 when linking the x64 server target.  Use vcpkg
+          # (pre-installed on windows-2022 runners) to get a proper x64 static
+          # build.  vcpkg's curl defaults to the WinSSL (schannel) backend on
+          # Windows, so it needs no extra OpenSSL linkage beyond what libcurl.gyp
+          # already declares (libcurl_a, ws2_32, wldap32, crypt32).
+          $ErrorActionPreference = "Stop"
+          $vcpkg = "C:\vcpkg\vcpkg.exe"
+          if (-not (Test-Path $vcpkg)) { throw "vcpkg not found at $vcpkg" }
+          Write-Host "Installing curl:x64-windows-static via vcpkg..."
+          & $vcpkg install "curl:x64-windows-static" 2>&1
+          if ($LASTEXITCODE -ne 0) { throw "vcpkg install failed (exit $LASTEXITCODE)" }
+          $pkg = "C:\vcpkg\packages\curl_x64-windows-static"
+          # Locate the installed lib files (name varies slightly by vcpkg version)
+          $relLib = Get-ChildItem "$pkg\lib"       -Filter "libcurl*.lib" -ErrorAction Stop | Select-Object -First 1
+          $dbgLib = Get-ChildItem "$pkg\debug\lib" -Filter "libcurl*.lib" -ErrorAction Stop | Select-Object -First 1
+          Write-Host "Release lib: $($relLib.FullName)"
+          Write-Host "Debug   lib: $($dbgLib.FullName)"
+          # The alias step already created the v143 dirs; just overwrite the .lib
+          $dstDebug   = "prebuilt\unpacked\curl\x86_64-win32-v143_static_Debug\lib\libcurl_a.lib"
+          $dstRelease = "prebuilt\unpacked\curl\x86_64-win32-v143_static_Release\lib\libcurl_a.lib"
+          Copy-Item $dbgLib.FullName $dstDebug   -Force
+          Copy-Item $relLib.FullName $dstRelease -Force
+          Write-Host "x64 static curl installed:"
+          Write-Host "  $dstDebug"
+          Write-Host "  $dstRelease"
+
       - name: Build thirdparty libraries
         shell: cmd
         run: build-thirdparty-x64.bat
