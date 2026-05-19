@@ -1501,37 +1501,6 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		{
 			MCdispatcher->wreshape(dw);
 			curinfo->handled = True;
-
-			// If a popover is open and its anchor stack just moved, translate
-			// the popover by the same delta so it stays anchored to its control.
-			if (MCpopoverstack != nullptr && MCpopoverparentstack != nullptr)
-			{
-				MCStack *t_moved = MCdispatcher->findstackd(dw);
-				if (t_moved != nullptr && t_moved == MCpopoverparentstack &&
-				    MCpopoverparentstack->getwindowalways() != nullptr)
-				{
-					RECT t_parent_rect;
-					GetWindowRect((HWND)MCpopoverparentstack->getwindowalways()->handle.window,
-					              &t_parent_rect);
-					int t_dx = (int)t_parent_rect.left - MCpopoverparentx;
-					int t_dy = (int)t_parent_rect.top  - MCpopoverparenty;
-					MCpopoverparentx = (int)t_parent_rect.left;
-					MCpopoverparenty = (int)t_parent_rect.top;
-
-					if ((t_dx != 0 || t_dy != 0) &&
-					    MCpopoverstack->getwindowalways() != nullptr)
-					{
-						RECT t_pop_rect;
-						GetWindowRect((HWND)MCpopoverstack->getwindowalways()->handle.window,
-						              &t_pop_rect);
-						SetWindowPos((HWND)MCpopoverstack->getwindowalways()->handle.window,
-						             nullptr,
-						             t_pop_rect.left + t_dx, t_pop_rect.top + t_dy,
-						             0, 0,
-						             SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-					}
-				}
-			}
 		}
 		break;
 	case WM_CLOSE:

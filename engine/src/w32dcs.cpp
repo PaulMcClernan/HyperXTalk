@@ -506,21 +506,7 @@ void MCScreenDC::openwindow(Window w, Boolean override)
 	// WM_ACTIVATE/WA_INACTIVE fires when the user clicks elsewhere — without
 	// requiring an initial click on the popover first.
 	if (t_stack != NULL && t_stack->getmode() == WM_POPOVER)
-	{
 		SetForegroundWindow((HWND)w->handle.window);
-
-		// Track the popover and capture the parent stack's screen origin so
-		// the WM_MOVE handler can translate the popover when the parent moves.
-		MCpopoverstack = t_stack;
-		if (MCpopoverparentstack != nullptr &&
-		    MCpopoverparentstack->getwindowalways() != nullptr)
-		{
-			RECT t_r;
-			GetWindowRect((HWND)MCpopoverparentstack->getwindowalways()->handle.window, &t_r);
-			MCpopoverparentx = (int)t_r.left;
-			MCpopoverparenty = (int)t_r.top;
-		}
-	}
 
 	if (t_stack != NULL)
 	{
@@ -538,14 +524,6 @@ void MCScreenDC::closewindow(Window w)
 
 	MCStack *t_stack;
 	t_stack = MCdispatcher -> findstackd(w);
-
-	// Clear popover tracking when the popover itself closes.
-	if (MCpopoverstack != nullptr && t_stack == MCpopoverstack)
-	{
-		MCpopoverstack = nullptr;
-		MCpopoverparentstack = nullptr;
-		MCpopoverparentx = MCpopoverparenty = 0;
-	}
 
     // If there is a mainwindow callback then re-enable the mainwindow if at
     // depth 1.
