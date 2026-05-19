@@ -19,7 +19,15 @@
 3. **Homebrew** — install from https://docs.brew.sh/Installation, then install
    the formulae the prebuild scripts need:
    ```bash
-   brew install openssl@3 libpq mysql-client
+   brew install openssl@3 libpq mysql-client pixman meson ninja pkg-config
+   ```
+   `meson` and `ninja` are required by the libcairo build step inside
+   `make prebuilt-mac`. `pixman` is a cairo dependency. `pkg-config` is
+   used by several prebuild scripts to locate library flags.
+
+   Also install VLC (needed for the media player integration):
+   ```bash
+   brew install --cask vlc
    ```
 
 4. **Java JDK (arm64)** — required to compile the JNI bindings in libfoundation.
@@ -43,6 +51,7 @@ From the repo root:
 
 ```bash
 cd ~/Developer/HyperXTalk
+make config-mac      # generates Xcode projects from GYP files
 make prebuilt-mac    # builds libffi, libskia & friends, libz, ICU, openssl
                      #   extras, libpq, libmysql — about 10 min on an M1
 make compile-mac
