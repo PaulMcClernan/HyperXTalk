@@ -112,6 +112,7 @@ build/
 mac-bin
 build-*/
 *.gn
+engine/obj/
 
 # SDKs          #
 #################
